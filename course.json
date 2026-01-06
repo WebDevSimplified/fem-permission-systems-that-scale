@@ -3,7 +3,7 @@
     "name": "Kyle Cook",
     "company": "Web Dev Simplified"
   },
-  "title": "Permission Systems in Web Apps",
+  "title": "Permission Systems that Scale",
   "subtitle": "RBAC, ABAC, and Building Your Own Authorization Engine",
   "frontendMastersLink": "",
   "social": {
@@ -23,6 +23,6 @@
     "Web Dev Simplified",
     "Frontend Masters"
   ],
-  "productionBaseUrl": "/fem-permissions",
+  "productionBaseUrl": "/fem-permission-systems-that-scale",
   "csvPath": "./out/lessons.csv"
 }
