@@ -1,0 +1,158 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width" data-next-head=""/><link rel="apple-touch-icon" sizes="180x180" href="/fem-permission-systems-that-scale/images/apple-touch-icon.png" data-next-head=""/><link rel="icon" type="image/png" sizes="32x32" href="/fem-permission-systems-that-scale/images/favicon-32x32.png" data-next-head=""/><link rel="icon" type="image/png" sizes="16x16" href="/fem-permission-systems-that-scale/images/favicon-16x16.png" data-next-head=""/><link rel="icon" type="image/png" sizes="16x16" href="/fem-permission-systems-that-scale/images/favicon-16x16.png" data-next-head=""/><link rel="icon" type="image/x-icon" href="/fem-permission-systems-that-scale/images/favicon.ico" data-next-head=""/><title data-next-head="">Permission Systems Overview – Permission Systems that Scale</title><meta name="description" content="An overview of the major permission system approaches: RBAC, ABAC, and ReBAC, with guidance on when to use each." data-next-head=""/><meta name="keywords" content="Permissions,Authorization,RBAC,ABAC,Access Control,TypeScript,Security,CASL,Web Dev Simplified,Frontend Masters" data-next-head=""/><meta name="og:description" content="An overview of the major permission system approaches: RBAC, ABAC, and ReBAC, with guidance on when to use each." data-next-head=""/><meta name="og:title" content="Permission Systems Overview – Permission Systems that Scale" data-next-head=""/><meta name="og:image" content="/fem-permission-systems-that-scale/images/social-share-cover.jpg" data-next-head=""/><meta name="twitter:card" content="summary_large_image" data-next-head=""/><link data-next-font="size-adjust" rel="preconnect" href="/" crossorigin="anonymous"/><link rel="preload" href="/fem-permission-systems-that-scale/_next/static/css/3e2d260a483e4ce6.css" as="style"/><link rel="stylesheet" href="/fem-permission-systems-that-scale/_next/static/css/3e2d260a483e4ce6.css" data-n-g=""/><noscript data-n-css=""></noscript><script defer="" noModule="" src="/fem-permission-systems-that-scale/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/webpack-561d6b920ac5fc2e.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/framework-2f335d22a7318891.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/main-8377b0572add80b6.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/pages/_app-ab9f88be91011ccd.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/pages/lessons/%5Bsection%5D/%5Bslug%5D-c23b0a3ff434a742.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/w1OGEPuJhJJ9Id6DmCFJl/_buildManifest.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/w1OGEPuJhJJ9Id6DmCFJl/_ssgManifest.js" defer=""></script></head><body><div id="__next"><div class="remix-app"><header class="navbar"><h1 class="navbar-brand"><a href="/fem-permission-systems-that-scale">Permission Systems that Scale</a></h1><div class="navbar-info"></div></header><div class="content-container"><div class="main"><div class="lesson-container"><div class="lesson"><div class="lesson-content"><h1>Permission Systems Overview</h1>
+<p>There are several approaches to implementing permissions. Each has trade-offs between simplicity and flexibility.</p>
+<h2>The Three Main Approaches</h2>
+<h3>RBAC: Role-Based Access Control</h3>
+<p><strong>Concept:</strong> Users are assigned roles, roles have permissions.</p>
+<pre><code class="hljs language-text"><button class="copy-btn">Copy</button>User → Role → Permissions
+
+Example:
+  Alice → Editor → [read, create, update]
+  Bob → Viewer → [read]
+  Carol → Admin → [read, create, update, delete, manage]
+</code></pre><p><strong>Pros:</strong></p>
+<ul>
+<li>Simple to understand and implement</li>
+<li>Easy to audit (&quot;who has admin access?&quot;)</li>
+<li>Works well for organizations with clear hierarchies</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Coarse-grained (editor can edit ALL documents)</li>
+<li>Role explosion in complex systems</li>
+<li>Can&#39;t express &quot;only your own resources&quot;</li>
+</ul>
+<p><strong>Best for:</strong> Simple applications, clear organizational roles, when you need easy auditing.</p>
+<hr>
+<h3>ABAC: Attribute-Based Access Control</h3>
+<p><strong>Concept:</strong> Decisions based on attributes of the user, resource, action, and environment.</p>
+<pre><code class="hljs language-text"><button class="copy-btn">Copy</button>User Attributes + Resource Attributes + Context → Decision
+
+Example:
+  Can update if:
+    - user.role == &quot;editor&quot; AND
+    - document.authorId == user.id AND
+    - document.status != &quot;published&quot;
+</code></pre><p><strong>Pros:</strong></p>
+<ul>
+<li>Fine-grained control</li>
+<li>Can express complex business rules</li>
+<li>Handles ownership, time-based rules, location, etc.</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>More complex to implement</li>
+<li>Harder to audit and reason about</li>
+<li>Policy can become sprawling</li>
+</ul>
+<p><strong>Best for:</strong> Multi-tenant apps, ownership-based access, complex business rules.</p>
+<hr>
+<h3>ReBAC: Relationship-Based Access Control</h3>
+<p><strong>Concept:</strong> Access based on relationships between entities in a graph.</p>
+<pre><code class="hljs language-text"><button class="copy-btn">Copy</button>User --[member_of]--&gt; Organization --[owns]--&gt; Document
+User --[shared_with]--&gt; Document
+
+Can view Document if:
+  - User is author of Document, OR
+  - User is member of Organization that owns Document, OR
+  - Document is shared with User
+</code></pre><p><strong>Pros:</strong></p>
+<ul>
+<li>Natural for social/collaborative apps</li>
+<li>Handles sharing and nested access well</li>
+<li>Scales to complex hierarchies</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Most complex to implement</li>
+<li>Requires graph traversal</li>
+<li>Can be slow without optimization</li>
+</ul>
+<p><strong>Best for:</strong> Collaborative apps, document sharing, social networks, complex organizational hierarchies.</p>
+<hr>
+<h2>Comparison Table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>RBAC</th>
+<th>ABAC</th>
+<th>ReBAC</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Complexity</strong></td>
+<td>Low</td>
+<td>Medium</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Flexibility</strong></td>
+<td>Low</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>&quot;Own resources&quot;</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>Sharing</strong></td>
+<td>❌</td>
+<td>⚠️</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>Audit</strong></td>
+<td>Easy</td>
+<td>Medium</td>
+<td>Hard</td>
+</tr>
+<tr>
+<td><strong>Implementation</strong></td>
+<td>Hours</td>
+<td>Days</td>
+<td>Weeks</td>
+</tr>
+</tbody></table>
+<h2>What We&#39;ll Build</h2>
+<p>In this workshop, we&#39;ll implement RBAC first, then evolve it to ABAC with field-level permissions. ReBAC is covered as an optional section.</p>
+<p>The key insight is that these aren&#39;t mutually exclusive. Most real applications use a <strong>combination</strong>:</p>
+<ul>
+<li>RBAC for broad access categories</li>
+<li>ABAC for fine-grained rules and ownership</li>
+<li>ReBAC for sharing features (if needed)</li>
+</ul>
+<h2>Common Terminology</h2>
+<p>Before we continue, let&#39;s define some terms we&#39;ll use throughout:</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Subject</strong></td>
+<td>The entity trying to perform an action (usually a user)</td>
+</tr>
+<tr>
+<td><strong>Resource</strong></td>
+<td>The thing being accessed (document, comment, user profile)</td>
+</tr>
+<tr>
+<td><strong>Action</strong></td>
+<td>What the subject wants to do (read, create, update, delete)</td>
+</tr>
+<tr>
+<td><strong>Policy</strong></td>
+<td>Rules that determine if an action is allowed</td>
+</tr>
+<tr>
+<td><strong>Condition</strong></td>
+<td>Additional constraints on a rule (ownership, status, time)</td>
+</tr>
+</tbody></table>
+<p>Now let&#39;s look at the application we&#39;ll be adding permissions to.</p>
+</div><div class="lesson-links"><a href="/fem-permission-systems-that-scale/lessons/introduction/why-permissions-matter" class="prev">← Previous</a><a href="/fem-permission-systems-that-scale/lessons/introduction/starter-app-tour" class="next">Next →</a></div></div><div class="details-bg"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="154" height="154" viewBox="0 0 154 154"><defs><clipPath id="clip-path"><rect id="Rectangle_2238" data-name="Rectangle 2238" width="154" height="154" transform="translate(9467 350)" fill="#fff" stroke="#707070" stroke-width="1"></rect></clipPath><clipPath id="clip-corner-image-active"><rect width="154" height="154"></rect></clipPath></defs><g id="corner-image-active" clip-path="url(#clip-corner-image-active)"><g id="Corner-image-active-2" data-name="Corner-image-active" transform="translate(-9467 -350)" clip-path="url(#clip-path)"><path id="Subtraction_34" data-name="Subtraction 34" d="M-3857.365,1740.766h0l-7.07-7.07,12.89-12.89v14.142l-5.818,5.818Zm-14.142-14.142h0l-7.071-7.07,27.033-27.033v14.143l-19.96,19.96Zm-14.143-14.143h0l-7.07-7.069,41.175-41.175v14.142Zm-14.142-14.142h0l-7.07-7.069,55.317-55.317v14.142Zm-14.142-14.142h0l-7.07-7.069,69.459-69.459v14.142Zm-14.142-14.142h0l-7.07-7.069,76.739-76.739h6.862v7.28Zm-14.143-14.143h0l-7.07-7.069,62.6-62.6h14.142Zm-14.142-14.142h0l-7.07-7.069,48.454-48.454h14.142Zm-14.142-14.142h0l-7.07-7.069,34.312-34.312h14.142Zm-14.142-14.142h0l-7.07-7.069,20.17-20.17h14.142Zm-14.142-14.142h0l-7.071-7.071,6.027-6.027h14.144l-13.1,13.1Zm367.24-56.114v-.909l.455.455-.453.453Z" transform="translate(13472.546 -1236.766)" fill="var(--corner-fill)"></path></g></g></svg></div></div></div></div><footer class="footer"><ul class="socials"><li class="social"><a href="https://twitter.com/DevSimplified"><svg fill="none" height="100%" width="32" xmlns="http://www.w3.org/2000/svg" viewBox="0.254 0.25 500 451.95400000000006"><path d="M394.033.25h76.67L303.202 191.693l197.052 260.511h-154.29L225.118 294.205 86.844 452.204H10.127l179.16-204.77L.254.25H158.46l109.234 144.417zm-26.908 406.063h42.483L135.377 43.73h-45.59z" fill="var(--footer-icons)"></path></svg></a></li><li class="social"><a href="https://github.com/WebDevSimplified"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="clip-github-social"><rect width="32" height="32"></rect></clipPath></defs><g id="github-social" clip-path="url(#clip-github-social)"><g id="Group_272" data-name="Group 272" transform="translate(13522.5 -6994)"><path id="Subtraction_33" data-name="Subtraction 33" d="M-24967.5,8041a15.9,15.9,0,0,1-11.312-4.688A15.893,15.893,0,0,1-24983.5,8025a15.893,15.893,0,0,1,4.689-11.315A15.894,15.894,0,0,1-24967.5,8009a15.894,15.894,0,0,1,11.313,4.686A15.893,15.893,0,0,1-24951.5,8025a15.893,15.893,0,0,1-4.689,11.313A15.9,15.9,0,0,1-24967.5,8041Zm-3.781-4.571h0v3.918h7.895v-6.665a1.836,1.836,0,0,0-1.2-1.718c5.1-.617,7.467-2.975,7.467-7.424a7.176,7.176,0,0,0-1.637-4.728,6.74,6.74,0,0,0,.275-1.812,4.34,4.34,0,0,0-.52-2.452.574.574,0,0,0-.359-.1c-1.061,0-3.465,1.411-3.936,1.694a16.644,16.644,0,0,0-4.2-.489,16.379,16.379,0,0,0-3.969.445c-.846-.5-2.91-1.649-3.859-1.649a.566.566,0,0,0-.354.095,4.3,4.3,0,0,0-.521,2.452,6.7,6.7,0,0,0,.244,1.718,7.346,7.346,0,0,0-1.6,4.822,7.263,7.263,0,0,0,1.533,4.985c1.193,1.359,3.115,2.165,5.871,2.464a1.826,1.826,0,0,0-1.129,1.693v.5h0l-.006,0a7.121,7.121,0,0,1-2.033.363,2.608,2.608,0,0,1-.965-.158,4.438,4.438,0,0,1-1.836-1.881,2.361,2.361,0,0,0-1.248-1.091,3.472,3.472,0,0,0-1.217-.3.584.584,0,0,0-.545.224.282.282,0,0,0,.027.367,1.875,1.875,0,0,0,.447.307,4.732,4.732,0,0,1,.561.355,10.726,10.726,0,0,1,1.682,2.755c.043.092.078.163.105.217a3.876,3.876,0,0,0,2.42,1.185,6.036,6.036,0,0,0,.607.025c.875,0,1.988-.124,2-.125Z" transform="translate(11461 -1015)" fill="var(--footer-icons)"></path><g id="Ellipse_670" data-name="Ellipse 670" transform="translate(-13522.5 6994)" fill="none" stroke="var(--footer-icons)" stroke-width="1"><circle cx="16" cy="16" r="16" stroke="none"></circle><circle cx="16" cy="16" r="15.5" fill="none"></circle></g></g></g></svg></a></li><li class="social"><div class="terms"><p>Content Licensed Under CC-BY-NC-4.0</p><p>Code Samples and Exercises Licensed Under Apache 2.0</p><p>Site Designed by<!-- --> <a href="https://www.alexdanielson.com/">Alex Danielson</a></p></div></li></ul><div class="theme-icons"><button aria-label="Activate dark mode" title="Activate dark mode" class="theme-toggle"><svg xmlns="http://www.w3.org/2000/svg" width="36px" height="100%" viewBox="0 -960 960 960" fill="var(--text-footer)" role="img"><title>Dark Mode Icon</title><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Z"></path></svg></button></div></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"post":{"attributes":{"description":"An overview of the major permission system approaches: RBAC, ABAC, and ReBAC, with guidance on when to use each."},"html":"\u003ch1\u003ePermission Systems Overview\u003c/h1\u003e\n\u003cp\u003eThere are several approaches to implementing permissions. Each has trade-offs between simplicity and flexibility.\u003c/p\u003e\n\u003ch2\u003eThe Three Main Approaches\u003c/h2\u003e\n\u003ch3\u003eRBAC: Role-Based Access Control\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eConcept:\u003c/strong\u003e Users are assigned roles, roles have permissions.\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-text\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003eUser → Role → Permissions\n\nExample:\n  Alice → Editor → [read, create, update]\n  Bob → Viewer → [read]\n  Carol → Admin → [read, create, update, delete, manage]\n\u003c/code\u003e\u003c/pre\u003e\u003cp\u003e\u003cstrong\u003ePros:\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eSimple to understand and implement\u003c/li\u003e\n\u003cli\u003eEasy to audit (\u0026quot;who has admin access?\u0026quot;)\u003c/li\u003e\n\u003cli\u003eWorks well for organizations with clear hierarchies\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003eCons:\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eCoarse-grained (editor can edit ALL documents)\u003c/li\u003e\n\u003cli\u003eRole explosion in complex systems\u003c/li\u003e\n\u003cli\u003eCan\u0026#39;t express \u0026quot;only your own resources\u0026quot;\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003eBest for:\u003c/strong\u003e Simple applications, clear organizational roles, when you need easy auditing.\u003c/p\u003e\n\u003chr\u003e\n\u003ch3\u003eABAC: Attribute-Based Access Control\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eConcept:\u003c/strong\u003e Decisions based on attributes of the user, resource, action, and environment.\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-text\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003eUser Attributes + Resource Attributes + Context → Decision\n\nExample:\n  Can update if:\n    - user.role == \u0026quot;editor\u0026quot; AND\n    - document.authorId == user.id AND\n    - document.status != \u0026quot;published\u0026quot;\n\u003c/code\u003e\u003c/pre\u003e\u003cp\u003e\u003cstrong\u003ePros:\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eFine-grained control\u003c/li\u003e\n\u003cli\u003eCan express complex business rules\u003c/li\u003e\n\u003cli\u003eHandles ownership, time-based rules, location, etc.\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003eCons:\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eMore complex to implement\u003c/li\u003e\n\u003cli\u003eHarder to audit and reason about\u003c/li\u003e\n\u003cli\u003ePolicy can become sprawling\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003eBest for:\u003c/strong\u003e Multi-tenant apps, ownership-based access, complex business rules.\u003c/p\u003e\n\u003chr\u003e\n\u003ch3\u003eReBAC: Relationship-Based Access Control\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eConcept:\u003c/strong\u003e Access based on relationships between entities in a graph.\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-text\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003eUser --[member_of]--\u0026gt; Organization --[owns]--\u0026gt; Document\nUser --[shared_with]--\u0026gt; Document\n\nCan view Document if:\n  - User is author of Document, OR\n  - User is member of Organization that owns Document, OR\n  - Document is shared with User\n\u003c/code\u003e\u003c/pre\u003e\u003cp\u003e\u003cstrong\u003ePros:\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eNatural for social/collaborative apps\u003c/li\u003e\n\u003cli\u003eHandles sharing and nested access well\u003c/li\u003e\n\u003cli\u003eScales to complex hierarchies\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003eCons:\u003c/strong\u003e\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eMost complex to implement\u003c/li\u003e\n\u003cli\u003eRequires graph traversal\u003c/li\u003e\n\u003cli\u003eCan be slow without optimization\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003e\u003cstrong\u003eBest for:\u003c/strong\u003e Collaborative apps, document sharing, social networks, complex organizational hierarchies.\u003c/p\u003e\n\u003chr\u003e\n\u003ch2\u003eComparison Table\u003c/h2\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eAspect\u003c/th\u003e\n\u003cth\u003eRBAC\u003c/th\u003e\n\u003cth\u003eABAC\u003c/th\u003e\n\u003cth\u003eReBAC\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eComplexity\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eLow\u003c/td\u003e\n\u003ctd\u003eMedium\u003c/td\u003e\n\u003ctd\u003eHigh\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eFlexibility\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eLow\u003c/td\u003e\n\u003ctd\u003eHigh\u003c/td\u003e\n\u003ctd\u003eHigh\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003e\u0026quot;Own resources\u0026quot;\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eSharing\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e⚠️\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eAudit\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eEasy\u003c/td\u003e\n\u003ctd\u003eMedium\u003c/td\u003e\n\u003ctd\u003eHard\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eImplementation\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eHours\u003c/td\u003e\n\u003ctd\u003eDays\u003c/td\u003e\n\u003ctd\u003eWeeks\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch2\u003eWhat We\u0026#39;ll Build\u003c/h2\u003e\n\u003cp\u003eIn this workshop, we\u0026#39;ll implement RBAC first, then evolve it to ABAC with field-level permissions. ReBAC is covered as an optional section.\u003c/p\u003e\n\u003cp\u003eThe key insight is that these aren\u0026#39;t mutually exclusive. Most real applications use a \u003cstrong\u003ecombination\u003c/strong\u003e:\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eRBAC for broad access categories\u003c/li\u003e\n\u003cli\u003eABAC for fine-grained rules and ownership\u003c/li\u003e\n\u003cli\u003eReBAC for sharing features (if needed)\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2\u003eCommon Terminology\u003c/h2\u003e\n\u003cp\u003eBefore we continue, let\u0026#39;s define some terms we\u0026#39;ll use throughout:\u003c/p\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eTerm\u003c/th\u003e\n\u003cth\u003eDefinition\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eSubject\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eThe entity trying to perform an action (usually a user)\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eResource\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eThe thing being accessed (document, comment, user profile)\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eAction\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eWhat the subject wants to do (read, create, update, delete)\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003ePolicy\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eRules that determine if an action is allowed\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eCondition\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eAdditional constraints on a rule (ownership, status, time)\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003cp\u003eNow let\u0026#39;s look at the application we\u0026#39;ll be adding permissions to.\u003c/p\u003e\n","markdown":"\n# Permission Systems Overview\n\nThere are several approaches to implementing permissions. Each has trade-offs between simplicity and flexibility.\n\n## The Three Main Approaches\n\n### RBAC: Role-Based Access Control\n\n**Concept:** Users are assigned roles, roles have permissions.\n\n```text\nUser → Role → Permissions\n\nExample:\n  Alice → Editor → [read, create, update]\n  Bob → Viewer → [read]\n  Carol → Admin → [read, create, update, delete, manage]\n```\n\n**Pros:**\n\n- Simple to understand and implement\n- Easy to audit (\"who has admin access?\")\n- Works well for organizations with clear hierarchies\n\n**Cons:**\n\n- Coarse-grained (editor can edit ALL documents)\n- Role explosion in complex systems\n- Can't express \"only your own resources\"\n\n**Best for:** Simple applications, clear organizational roles, when you need easy auditing.\n\n---\n\n### ABAC: Attribute-Based Access Control\n\n**Concept:** Decisions based on attributes of the user, resource, action, and environment.\n\n```text\nUser Attributes + Resource Attributes + Context → Decision\n\nExample:\n  Can update if:\n    - user.role == \"editor\" AND\n    - document.authorId == user.id AND\n    - document.status != \"published\"\n```\n\n**Pros:**\n\n- Fine-grained control\n- Can express complex business rules\n- Handles ownership, time-based rules, location, etc.\n\n**Cons:**\n\n- More complex to implement\n- Harder to audit and reason about\n- Policy can become sprawling\n\n**Best for:** Multi-tenant apps, ownership-based access, complex business rules.\n\n---\n\n### ReBAC: Relationship-Based Access Control\n\n**Concept:** Access based on relationships between entities in a graph.\n\n```text\nUser --[member_of]--\u003e Organization --[owns]--\u003e Document\nUser --[shared_with]--\u003e Document\n\nCan view Document if:\n  - User is author of Document, OR\n  - User is member of Organization that owns Document, OR\n  - Document is shared with User\n```\n\n**Pros:**\n\n- Natural for social/collaborative apps\n- Handles sharing and nested access well\n- Scales to complex hierarchies\n\n**Cons:**\n\n- Most complex to implement\n- Requires graph traversal\n- Can be slow without optimization\n\n**Best for:** Collaborative apps, document sharing, social networks, complex organizational hierarchies.\n\n---\n\n## Comparison Table\n\n| Aspect              | RBAC  | ABAC   | ReBAC |\n| ------------------- | ----- | ------ | ----- |\n| **Complexity**      | Low   | Medium | High  |\n| **Flexibility**     | Low   | High   | High  |\n| **\"Own resources\"** | ❌    | ✅     | ✅    |\n| **Sharing**         | ❌    | ⚠️     | ✅    |\n| **Audit**           | Easy  | Medium | Hard  |\n| **Implementation**  | Hours | Days   | Weeks |\n\n## What We'll Build\n\nIn this workshop, we'll implement RBAC first, then evolve it to ABAC with field-level permissions. ReBAC is covered as an optional section.\n\nThe key insight is that these aren't mutually exclusive. Most real applications use a **combination**:\n\n- RBAC for broad access categories\n- ABAC for fine-grained rules and ownership\n- ReBAC for sharing features (if needed)\n\n## Common Terminology\n\nBefore we continue, let's define some terms we'll use throughout:\n\n| Term          | Definition                                                  |\n| ------------- | ----------------------------------------------------------- |\n| **Subject**   | The entity trying to perform an action (usually a user)     |\n| **Resource**  | The thing being accessed (document, comment, user profile)  |\n| **Action**    | What the subject wants to do (read, create, update, delete) |\n| **Policy**    | Rules that determine if an action is allowed                |\n| **Condition** | Additional constraints on a rule (ownership, status, time)  |\n\nNow let's look at the application we'll be adding permissions to.\n","slug":"permission-systems-overview","title":"Permission Systems Overview","section":"Introduction","icon":"door-open","filePath":"/home/runner/work/fem-permission-systems-that-scale/fem-permission-systems-that-scale/lessons/01-introduction/B-permission-systems-overview.md","nextSlug":"/fem-permission-systems-that-scale/lessons/introduction/starter-app-tour","prevSlug":"/fem-permission-systems-that-scale/lessons/introduction/why-permissions-matter"}},"__N_SSG":true},"page":"/lessons/[section]/[slug]","query":{"section":"introduction","slug":"permission-systems-overview"},"buildId":"w1OGEPuJhJJ9Id6DmCFJl","assetPrefix":"/fem-permission-systems-that-scale","isFallback":false,"gsp":true,"scriptLoader":[]}</script></body></html>
