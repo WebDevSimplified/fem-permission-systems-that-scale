@@ -1,0 +1,28 @@
+{
+  "author": {
+    "name": "Kyle Cook",
+    "company": "Web Dev Simplified"
+  },
+  "title": "Permission Systems in Web Apps",
+  "subtitle": "RBAC, ABAC, and Building Your Own Authorization Engine",
+  "frontendMastersLink": "",
+  "social": {
+    "github": "WebDevSimplified",
+    "twitter": "DevSimplified"
+  },
+  "description": "Learn how to implement robust permission systems in your web applications. Master RBAC, ABAC, field-level permissions, and build your own authorization engine from scratch using TypeScript.",
+  "keywords": [
+    "Permissions",
+    "Authorization",
+    "RBAC",
+    "ABAC",
+    "Access Control",
+    "TypeScript",
+    "Security",
+    "CASL",
+    "Web Dev Simplified",
+    "Frontend Masters"
+  ],
+  "productionBaseUrl": "/fem-permissions",
+  "csvPath": "./out/lessons.csv"
+}
