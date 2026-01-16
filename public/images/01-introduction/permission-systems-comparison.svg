@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <!-- Background -->
+  <rect width="800" height="450" fill="#fafafa" />
+
+  <!-- Title -->
+  <text x="400" y="35" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20"
+    font-weight="600" fill="#1a1a1a">Permission Systems Comparison</text>
+
+  <!-- Axes -->
+  <line x1="100" y1="380" x2="720" y2="380" stroke="#ccc" stroke-width="2" />
+  <line x1="100" y1="380" x2="100" y2="80" stroke="#ccc" stroke-width="2" />
+
+  <!-- X-axis label -->
+  <text x="410" y="420" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14"
+    font-weight="500" fill="#666">Flexibility →</text>
+
+  <!-- Y-axis label -->
+  <text x="50" y="230" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14"
+    font-weight="500" fill="#666" transform="rotate(-90, 50, 230)">Complexity →</text>
+
+  <!-- Grid lines (subtle) -->
+  <line x1="100" y1="280" x2="720" y2="280" stroke="#e8e8e8" stroke-width="1" stroke-dasharray="5,5" />
+  <line x1="100" y1="180" x2="720" y2="180" stroke="#e8e8e8" stroke-width="1" stroke-dasharray="5,5" />
+  <line x1="310" y1="80" x2="310" y2="380" stroke="#e8e8e8" stroke-width="1" stroke-dasharray="5,5" />
+  <line x1="520" y1="80" x2="520" y2="380" stroke="#e8e8e8" stroke-width="1" stroke-dasharray="5,5" />
+
+  <!-- RBAC Circle -->
+  <g transform="translate(200, 320)">
+    <circle r="55" fill="#4A90D9" opacity="0.2" stroke="#4A90D9" stroke-width="3" />
+    <text y="-15" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18"
+      font-weight="700" fill="#4A90D9">RBAC</text>
+    <text y="8" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11"
+      fill="#1a1a1a">Role-Based</text>
+    <text y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11"
+      fill="#1a1a1a">Access Control</text>
+  </g>
+
+  <!-- ABAC Circle -->
+  <g transform="translate(500, 180)">
+    <circle r="65" fill="#3B9B6F" opacity="0.2" stroke="#3B9B6F" stroke-width="3" />
+    <text y="-20" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18"
+      font-weight="700" fill="#3B9B6F">ABAC</text>
+    <text y="3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11"
+      fill="#1a1a1a">Attribute-Based</text>
+    <text y="19" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11"
+      fill="#1a1a1a">Access Control</text>
+  </g>
+
+  <!-- ReBAC Circle -->
+  <g transform="translate(620, 130)">
+    <circle r="50" fill="#E67E22" opacity="0.2" stroke="#E67E22" stroke-width="3" />
+    <text y="-12" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18"
+      font-weight="700" fill="#E67E22">ReBAC</text>
+    <text y="8" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11"
+      fill="#1a1a1a">Relationship-Based</text>
+    <text y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11"
+      fill="#1a1a1a">Access Control</text>
+  </g>
+
+  <!-- Annotations -->
+  <g font-family="system-ui, sans-serif" font-size="10" fill="#888">
+    <text x="140" y="395">Simple</text>
+    <text x="680" y="395">Flexible</text>
+    <text x="108" y="350">Low</text>
+    <text x="108" y="100">High</text>
+  </g>
+</svg>

@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 500">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B9B6F" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="920" height="500" fill="#fafafa" />
+
+  <!-- Title -->
+  <text x="460" y="35" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20"
+    font-weight="600" fill="#1a1a1a">Entity Relationships</text>
+
+  <!-- USER TABLE -->
+  <g transform="translate(40, 80)">
+    <rect width="200" height="220" rx="8" fill="white" stroke="#4A90D9" stroke-width="2" />
+    <rect width="200" height="40" rx="8" fill="#4A90D9" opacity="0.15" />
+    <rect y="40" width="200" height="1" fill="#4A90D9" opacity="0.3" />
+    <text x="100" y="27" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16"
+      font-weight="700" fill="#4A90D9">User</text>
+
+    <!-- Fields -->
+    <g font-family="monospace" font-size="12" fill="#1a1a1a">
+      <text x="15" y="65"><tspan fill="#888">id:</tspan> uuid</text>
+      <text x="15" y="85"><tspan fill="#888">email:</tspan> string</text>
+      <text x="15" y="105"><tspan fill="#888">name:</tspan> string</text>
+      <text x="15" y="125">
+        <tspan fill="#888">role:</tspan>
+        <tspan fill="#3B9B6F">viewer | editor</tspan>
+      </text>
+      <text x="15" y="145">
+        <tspan fill="#3B9B6F"> | author | admin</tspan>
+      </text>
+      <text x="15" y="170"><tspan fill="#888">department:</tspan> string</text>
+      <text x="15" y="195" fill="#888" font-size="11">createdAt, updatedAt</text>
+    </g>
+  </g>
+
+  <!-- PROJECT TABLE -->
+  <g transform="translate(360, 80)">
+    <rect width="200" height="200" rx="8" fill="white" stroke="#3B9B6F" stroke-width="2" />
+    <rect width="200" height="40" rx="8" fill="#3B9B6F" opacity="0.15" />
+    <rect y="40" width="200" height="1" fill="#3B9B6F" opacity="0.3" />
+    <text x="100" y="27" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16"
+      font-weight="700" fill="#3B9B6F">Project</text>
+
+    <!-- Fields -->
+    <g font-family="monospace" font-size="12" fill="#1a1a1a">
+      <text x="15" y="65"><tspan fill="#888">id:</tspan> uuid</text>
+      <text x="15" y="85"><tspan fill="#888">name:</tspan> string</text>
+      <text x="15" y="105"><tspan fill="#888">description:</tspan> string</text>
+      <text x="15" y="125">
+        <tspan fill="#888">ownerId:</tspan>
+        <tspan fill="#4A90D9">uuid → User</tspan>
+      </text>
+      <text x="15" y="150"><tspan fill="#888">department:</tspan> string?</text>
+      <text x="15" y="175" fill="#888" font-size="11">createdAt, updatedAt</text>
+    </g>
+  </g>
+
+  <!-- DOCUMENT TABLE -->
+  <g transform="translate(680, 80)">
+    <rect width="200" height="280" rx="8" fill="white" stroke="#E67E22" stroke-width="2" />
+    <rect width="200" height="40" rx="8" fill="#E67E22" opacity="0.15" />
+    <rect y="40" width="200" height="1" fill="#E67E22" opacity="0.3" />
+    <text x="100" y="27" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16"
+      font-weight="700" fill="#E67E22">Document</text>
+
+    <!-- Fields -->
+    <g font-family="monospace" font-size="12" fill="#1a1a1a">
+      <text x="15" y="65"><tspan fill="#888">id:</tspan> uuid</text>
+      <text x="15" y="85"><tspan fill="#888">title:</tspan> string</text>
+      <text x="15" y="105"><tspan fill="#888">content:</tspan> string</text>
+      <text x="15" y="125">
+        <tspan fill="#888">status:</tspan>
+        <tspan fill="#3B9B6F">draft | published</tspan>
+      </text>
+      <text x="15" y="145">
+        <tspan fill="#3B9B6F"> | archived</tspan>
+      </text>
+      <text x="15" y="170"><tspan fill="#888">isLocked:</tspan> boolean</text>
+      <text x="15" y="195">
+        <tspan fill="#888">projectId:</tspan>
+        <tspan fill="#3B9B6F">→ Project</tspan>
+      </text>
+      <text x="15" y="215">
+        <tspan fill="#888">creatorId:</tspan>
+        <tspan fill="#4A90D9">→ User</tspan>
+      </text>
+      <text x="15" y="235">
+        <tspan fill="#888">lastEditedById:</tspan>
+        <tspan fill="#4A90D9">→ User</tspan>
+      </text>
+      <text x="15" y="260" fill="#888" font-size="11">createdAt, updatedAt</text>
+    </g>
+  </g>
+
+  <!-- Relationship lines -->
+  <!-- User owns Project -->
+  <path d="M 240 200 L 360 200" fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="300" y="190" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10"
+    fill="#666">owns</text>
+
+  <!-- Project contains Document -->
+  <path d="M 560 180 L 680 180" fill="none" stroke="#666" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="620" y="170" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10"
+    fill="#666">has</text>
+
+  <!-- User creates Document (curved line) -->
+  <path d="M 140 300 Q 140 400 780 380 L 780 360" fill="none" stroke="#4A90D9" stroke-width="1.5"
+    stroke-dasharray="5,3" />
+  <text x="460" y="370" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10"
+    fill="#4A90D9">creates / edits</text>
+
+  <!-- LEGEND -->
+  <g transform="translate(40, 440)">
+    <text font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#1a1a1a">Key
+      Attributes for Permissions:</text>
+
+    <g transform="translate(0, 25)" font-family="system-ui, sans-serif" font-size="12">
+      <circle cx="8" cy="-4" r="4" fill="#4A90D9" />
+      <text x="20" fill="#1a1a1a"><tspan font-weight="500">User.role</tspan> — determines base
+        permission level</text>
+    </g>
+
+    <g transform="translate(0, 45)" font-family="system-ui, sans-serif" font-size="12">
+      <circle cx="8" cy="-4" r="4" fill="#3B9B6F" />
+      <text x="20" fill="#1a1a1a"><tspan font-weight="500">User.department</tspan> — scopes access
+        to projects/documents</text>
+    </g>
+
+    <g transform="translate(480, 25)" font-family="system-ui, sans-serif" font-size="12">
+      <circle cx="8" cy="-4" r="4" fill="#E67E22" />
+      <text x="20" fill="#1a1a1a"><tspan font-weight="500">Document.status</tspan> — affects what
+        actions are allowed</text>
+    </g>
+
+    <g transform="translate(480, 45)" font-family="system-ui, sans-serif" font-size="12">
+      <circle cx="8" cy="-4" r="4" fill="#888" />
+      <text x="20" fill="#1a1a1a"><tspan font-weight="500">Document.isLocked</tspan> — restricts
+        editing</text>
+    </g>
+  </g>
+</svg>
