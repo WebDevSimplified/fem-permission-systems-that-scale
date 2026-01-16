@@ -1,0 +1,197 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width" data-next-head=""/><link rel="apple-touch-icon" sizes="180x180" href="/fem-permission-systems-that-scale/images/apple-touch-icon.png" data-next-head=""/><link rel="icon" type="image/png" sizes="32x32" href="/fem-permission-systems-that-scale/images/favicon-32x32.png" data-next-head=""/><link rel="icon" type="image/png" sizes="16x16" href="/fem-permission-systems-that-scale/images/favicon-16x16.png" data-next-head=""/><link rel="icon" type="image/png" sizes="16x16" href="/fem-permission-systems-that-scale/images/favicon-16x16.png" data-next-head=""/><link rel="icon" type="image/x-icon" href="/fem-permission-systems-that-scale/images/favicon.ico" data-next-head=""/><title data-next-head="">Starter App Tour – Permission Systems that Scale</title><meta name="description" content="Tour the Document Management System starter app and understand why it currently has no security - anyone can do anything." data-next-head=""/><meta name="keywords" content="Permissions,Authorization,RBAC,ABAC,Access Control,TypeScript,Security,CASL,Web Dev Simplified,Frontend Masters" data-next-head=""/><meta name="og:description" content="Tour the Document Management System starter app and understand why it currently has no security - anyone can do anything." data-next-head=""/><meta name="og:title" content="Starter App Tour – Permission Systems that Scale" data-next-head=""/><meta name="og:image" content="/fem-permission-systems-that-scale/images/social-share-cover.jpg" data-next-head=""/><meta name="twitter:card" content="summary_large_image" data-next-head=""/><link data-next-font="size-adjust" rel="preconnect" href="/" crossorigin="anonymous"/><link rel="preload" href="/fem-permission-systems-that-scale/_next/static/css/3e2d260a483e4ce6.css" as="style"/><link rel="stylesheet" href="/fem-permission-systems-that-scale/_next/static/css/3e2d260a483e4ce6.css" data-n-g=""/><noscript data-n-css=""></noscript><script defer="" noModule="" src="/fem-permission-systems-that-scale/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/webpack-561d6b920ac5fc2e.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/framework-2f335d22a7318891.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/main-8377b0572add80b6.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/pages/_app-ab9f88be91011ccd.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/pages/lessons/%5Bsection%5D/%5Bslug%5D-c23b0a3ff434a742.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/FYlJTMatlkWBhuBe6vCwC/_buildManifest.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/FYlJTMatlkWBhuBe6vCwC/_ssgManifest.js" defer=""></script></head><body><div id="__next"><div class="remix-app"><header class="navbar"><h1 class="navbar-brand"><a href="/fem-permission-systems-that-scale">Permission Systems that Scale</a></h1><div class="navbar-info"></div></header><div class="content-container"><div class="main"><div class="lesson-container"><div class="lesson"><div class="lesson-content"><h1>Starter App Tour</h1>
+<p>Let&#39;s explore the application we&#39;ll be adding permissions to throughout this workshop.</p>
+<h2>The Document Management System</h2>
+<p>We have a simple but realistic application: a <strong>Document Management System</strong> for organizations. It has:</p>
+<ul>
+<li><strong>Users</strong> with different roles (admin, editor, viewer)</li>
+<li><strong>Organizations</strong> (multi-tenant)</li>
+<li><strong>Documents</strong> with various fields and statuses</li>
+<li><strong>Comments</strong> on documents</li>
+</ul>
+<h2>Tech Stack</h2>
+<ul>
+<li><strong>Backend:</strong> Express + TypeScript</li>
+<li><strong>Database:</strong> SQLite + Drizzle ORM</li>
+<li><strong>Frontend:</strong> React + TypeScript (Vite)</li>
+<li><strong>Auth:</strong> Session-based with cookies</li>
+</ul>
+<h2>Pre-Seeded Accounts</h2>
+<p>The app comes with test accounts you can log in with:</p>
+<table>
+<thead>
+<tr>
+<th>Email</th>
+<th>Password</th>
+<th>Role</th>
+<th>Organization</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin@acme.com</code></td>
+<td><code>password</code></td>
+<td>Admin</td>
+<td>Acme Corp</td>
+</tr>
+<tr>
+<td><code>editor@acme.com</code></td>
+<td><code>password</code></td>
+<td>Editor</td>
+<td>Acme Corp</td>
+</tr>
+<tr>
+<td><code>viewer@acme.com</code></td>
+<td><code>password</code></td>
+<td>Viewer</td>
+<td>Acme Corp</td>
+</tr>
+<tr>
+<td><code>editor@globex.com</code></td>
+<td><code>password</code></td>
+<td>Editor</td>
+<td>Globex Inc</td>
+</tr>
+<tr>
+<td><code>admin@globex.com</code></td>
+<td><code>password</code></td>
+<td>Admin</td>
+<td>Globex Inc</td>
+</tr>
+</tbody></table>
+<h2>Live Code: Starting the App</h2>
+<p>Let&#39;s start the application and explore what&#39;s there:</p>
+<pre><code class="hljs language-bash"><button class="copy-btn">Copy</button><span class="hljs-comment"># Install dependencies</span>
+npm install
+
+<span class="hljs-comment"># Start the development servers</span>
+npm run dev
+</code></pre><p>This starts both the backend API (port 3001) and frontend (port 5173).</p>
+<h2>The Current Problem: No Permissions!</h2>
+<p>Right now, the app has <strong>zero permission checks</strong>. Let&#39;s see why that&#39;s dangerous:</p>
+<h3>Problem 1: Anyone Can Edit Anything</h3>
+<ol>
+<li>Log in as <code>viewer@acme.com</code></li>
+<li>Navigate to any document</li>
+<li>Click &quot;Edit&quot; - it works!</li>
+</ol>
+<p>Viewers shouldn&#39;t be able to edit documents, but there&#39;s no check preventing it.</p>
+<h3>Problem 2: Cross-Organization Access</h3>
+<ol>
+<li>Log in as <code>editor@acme.com</code></li>
+<li>You can see and edit documents belonging to Globex Inc</li>
+</ol>
+<p>Organizations should be isolated from each other.</p>
+<h3>Problem 3: Sensitive Fields Exposed</h3>
+<ol>
+<li>Log in as <code>viewer@acme.com</code></li>
+<li>Look at any document&#39;s details</li>
+<li>You can see <code>internalNotes</code> - a field meant only for admins!</li>
+</ol>
+<h3>Problem 4: Anyone Can Delete</h3>
+<ol>
+<li>Log in as <code>editor@acme.com</code></li>
+<li>Click &quot;Delete&quot; on any document - it works!</li>
+</ol>
+<p>Only admins should be able to delete documents.</p>
+<h2>Document Fields</h2>
+<p>Here are the fields on a document, and who <em>should</em> be able to access them:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Viewer Read</th>
+<th>Editor Read</th>
+<th>Admin Read</th>
+<th>Editor Write</th>
+<th>Admin Write</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>authorId</code></td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>orgId</code></td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>internalNotes</code></td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>createdAt</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+</tbody></table>
+<p>Currently, everyone sees everything and can edit everything. We&#39;ll fix that.</p>
+<h2>The API Routes</h2>
+<p>Here are the routes we need to protect:</p>
+<pre><code class="hljs language-text"><button class="copy-btn">Copy</button>GET    /api/documents          - List all documents
+POST   /api/documents          - Create a document
+GET    /api/documents/:id      - Get a single document
+PUT    /api/documents/:id      - Update a document
+DELETE /api/documents/:id      - Delete a document
+
+GET    /api/documents/:id/comments    - List comments
+POST   /api/documents/:id/comments    - Create a comment
+DELETE /api/comments/:id              - Delete a comment
+</code></pre><h2>Our Goal</h2>
+<p>By the end of this workshop, we&#39;ll have:</p>
+<ol>
+<li>✅ Role-based route protection (RBAC)</li>
+<li>✅ Ownership-based access (only edit your own documents)</li>
+<li>✅ Organization isolation (can&#39;t see other orgs&#39; data)</li>
+<li>✅ Field-level read permissions (hide sensitive fields)</li>
+<li>✅ Field-level write permissions (prevent editing certain fields)</li>
+<li>✅ A reusable permission library</li>
+<li>✅ React components for UI permission checks</li>
+</ol>
+<p>Let&#39;s start by adding basic role-based access control.</p>
+</div><div class="lesson-links"><a href="/fem-permission-systems-that-scale/lessons/introduction/permission-systems-overview" class="prev">← Previous</a><a href="/fem-permission-systems-that-scale/lessons/introduction/permissions-table" class="next">Next →</a></div></div><div class="details-bg"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="154" height="154" viewBox="0 0 154 154"><defs><clipPath id="clip-path"><rect id="Rectangle_2238" data-name="Rectangle 2238" width="154" height="154" transform="translate(9467 350)" fill="#fff" stroke="#707070" stroke-width="1"></rect></clipPath><clipPath id="clip-corner-image-active"><rect width="154" height="154"></rect></clipPath></defs><g id="corner-image-active" clip-path="url(#clip-corner-image-active)"><g id="Corner-image-active-2" data-name="Corner-image-active" transform="translate(-9467 -350)" clip-path="url(#clip-path)"><path id="Subtraction_34" data-name="Subtraction 34" d="M-3857.365,1740.766h0l-7.07-7.07,12.89-12.89v14.142l-5.818,5.818Zm-14.142-14.142h0l-7.071-7.07,27.033-27.033v14.143l-19.96,19.96Zm-14.143-14.143h0l-7.07-7.069,41.175-41.175v14.142Zm-14.142-14.142h0l-7.07-7.069,55.317-55.317v14.142Zm-14.142-14.142h0l-7.07-7.069,69.459-69.459v14.142Zm-14.142-14.142h0l-7.07-7.069,76.739-76.739h6.862v7.28Zm-14.143-14.143h0l-7.07-7.069,62.6-62.6h14.142Zm-14.142-14.142h0l-7.07-7.069,48.454-48.454h14.142Zm-14.142-14.142h0l-7.07-7.069,34.312-34.312h14.142Zm-14.142-14.142h0l-7.07-7.069,20.17-20.17h14.142Zm-14.142-14.142h0l-7.071-7.071,6.027-6.027h14.144l-13.1,13.1Zm367.24-56.114v-.909l.455.455-.453.453Z" transform="translate(13472.546 -1236.766)" fill="var(--corner-fill)"></path></g></g></svg></div></div></div></div><footer class="footer"><ul class="socials"><li class="social"><a href="https://twitter.com/DevSimplified"><svg fill="none" height="100%" width="32" xmlns="http://www.w3.org/2000/svg" viewBox="0.254 0.25 500 451.95400000000006"><path d="M394.033.25h76.67L303.202 191.693l197.052 260.511h-154.29L225.118 294.205 86.844 452.204H10.127l179.16-204.77L.254.25H158.46l109.234 144.417zm-26.908 406.063h42.483L135.377 43.73h-45.59z" fill="var(--footer-icons)"></path></svg></a></li><li class="social"><a href="https://github.com/WebDevSimplified"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="clip-github-social"><rect width="32" height="32"></rect></clipPath></defs><g id="github-social" clip-path="url(#clip-github-social)"><g id="Group_272" data-name="Group 272" transform="translate(13522.5 -6994)"><path id="Subtraction_33" data-name="Subtraction 33" d="M-24967.5,8041a15.9,15.9,0,0,1-11.312-4.688A15.893,15.893,0,0,1-24983.5,8025a15.893,15.893,0,0,1,4.689-11.315A15.894,15.894,0,0,1-24967.5,8009a15.894,15.894,0,0,1,11.313,4.686A15.893,15.893,0,0,1-24951.5,8025a15.893,15.893,0,0,1-4.689,11.313A15.9,15.9,0,0,1-24967.5,8041Zm-3.781-4.571h0v3.918h7.895v-6.665a1.836,1.836,0,0,0-1.2-1.718c5.1-.617,7.467-2.975,7.467-7.424a7.176,7.176,0,0,0-1.637-4.728,6.74,6.74,0,0,0,.275-1.812,4.34,4.34,0,0,0-.52-2.452.574.574,0,0,0-.359-.1c-1.061,0-3.465,1.411-3.936,1.694a16.644,16.644,0,0,0-4.2-.489,16.379,16.379,0,0,0-3.969.445c-.846-.5-2.91-1.649-3.859-1.649a.566.566,0,0,0-.354.095,4.3,4.3,0,0,0-.521,2.452,6.7,6.7,0,0,0,.244,1.718,7.346,7.346,0,0,0-1.6,4.822,7.263,7.263,0,0,0,1.533,4.985c1.193,1.359,3.115,2.165,5.871,2.464a1.826,1.826,0,0,0-1.129,1.693v.5h0l-.006,0a7.121,7.121,0,0,1-2.033.363,2.608,2.608,0,0,1-.965-.158,4.438,4.438,0,0,1-1.836-1.881,2.361,2.361,0,0,0-1.248-1.091,3.472,3.472,0,0,0-1.217-.3.584.584,0,0,0-.545.224.282.282,0,0,0,.027.367,1.875,1.875,0,0,0,.447.307,4.732,4.732,0,0,1,.561.355,10.726,10.726,0,0,1,1.682,2.755c.043.092.078.163.105.217a3.876,3.876,0,0,0,2.42,1.185,6.036,6.036,0,0,0,.607.025c.875,0,1.988-.124,2-.125Z" transform="translate(11461 -1015)" fill="var(--footer-icons)"></path><g id="Ellipse_670" data-name="Ellipse 670" transform="translate(-13522.5 6994)" fill="none" stroke="var(--footer-icons)" stroke-width="1"><circle cx="16" cy="16" r="16" stroke="none"></circle><circle cx="16" cy="16" r="15.5" fill="none"></circle></g></g></g></svg></a></li><li class="social"><div class="terms"><p>Content Licensed Under CC-BY-NC-4.0</p><p>Code Samples and Exercises Licensed Under Apache 2.0</p><p>Site Designed by<!-- --> <a href="https://www.alexdanielson.com/">Alex Danielson</a></p></div></li></ul><div class="theme-icons"><button aria-label="Activate dark mode" title="Activate dark mode" class="theme-toggle"><svg xmlns="http://www.w3.org/2000/svg" width="36px" height="100%" viewBox="0 -960 960 960" fill="var(--text-footer)" role="img"><title>Dark Mode Icon</title><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Z"></path></svg></button></div></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"post":{"attributes":{"description":"Tour the Document Management System starter app and understand why it currently has no security - anyone can do anything."},"html":"\u003ch1\u003eStarter App Tour\u003c/h1\u003e\n\u003cp\u003eLet\u0026#39;s explore the application we\u0026#39;ll be adding permissions to throughout this workshop.\u003c/p\u003e\n\u003ch2\u003eThe Document Management System\u003c/h2\u003e\n\u003cp\u003eWe have a simple but realistic application: a \u003cstrong\u003eDocument Management System\u003c/strong\u003e for organizations. It has:\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003e\u003cstrong\u003eUsers\u003c/strong\u003e with different roles (admin, editor, viewer)\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eOrganizations\u003c/strong\u003e (multi-tenant)\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eDocuments\u003c/strong\u003e with various fields and statuses\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eComments\u003c/strong\u003e on documents\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2\u003eTech Stack\u003c/h2\u003e\n\u003cul\u003e\n\u003cli\u003e\u003cstrong\u003eBackend:\u003c/strong\u003e Express + TypeScript\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eDatabase:\u003c/strong\u003e SQLite + Drizzle ORM\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eFrontend:\u003c/strong\u003e React + TypeScript (Vite)\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eAuth:\u003c/strong\u003e Session-based with cookies\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch2\u003ePre-Seeded Accounts\u003c/h2\u003e\n\u003cp\u003eThe app comes with test accounts you can log in with:\u003c/p\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eEmail\u003c/th\u003e\n\u003cth\u003ePassword\u003c/th\u003e\n\u003cth\u003eRole\u003c/th\u003e\n\u003cth\u003eOrganization\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eadmin@acme.com\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003epassword\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003eAdmin\u003c/td\u003e\n\u003ctd\u003eAcme Corp\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eeditor@acme.com\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003epassword\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003eEditor\u003c/td\u003e\n\u003ctd\u003eAcme Corp\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eviewer@acme.com\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003epassword\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003eViewer\u003c/td\u003e\n\u003ctd\u003eAcme Corp\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eeditor@globex.com\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003epassword\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003eEditor\u003c/td\u003e\n\u003ctd\u003eGlobex Inc\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eadmin@globex.com\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003epassword\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003eAdmin\u003c/td\u003e\n\u003ctd\u003eGlobex Inc\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch2\u003eLive Code: Starting the App\u003c/h2\u003e\n\u003cp\u003eLet\u0026#39;s start the application and explore what\u0026#39;s there:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-bash\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-comment\"\u003e# Install dependencies\u003c/span\u003e\nnpm install\n\n\u003cspan class=\"hljs-comment\"\u003e# Start the development servers\u003c/span\u003e\nnpm run dev\n\u003c/code\u003e\u003c/pre\u003e\u003cp\u003eThis starts both the backend API (port 3001) and frontend (port 5173).\u003c/p\u003e\n\u003ch2\u003eThe Current Problem: No Permissions!\u003c/h2\u003e\n\u003cp\u003eRight now, the app has \u003cstrong\u003ezero permission checks\u003c/strong\u003e. Let\u0026#39;s see why that\u0026#39;s dangerous:\u003c/p\u003e\n\u003ch3\u003eProblem 1: Anyone Can Edit Anything\u003c/h3\u003e\n\u003col\u003e\n\u003cli\u003eLog in as \u003ccode\u003eviewer@acme.com\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003eNavigate to any document\u003c/li\u003e\n\u003cli\u003eClick \u0026quot;Edit\u0026quot; - it works!\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eViewers shouldn\u0026#39;t be able to edit documents, but there\u0026#39;s no check preventing it.\u003c/p\u003e\n\u003ch3\u003eProblem 2: Cross-Organization Access\u003c/h3\u003e\n\u003col\u003e\n\u003cli\u003eLog in as \u003ccode\u003eeditor@acme.com\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003eYou can see and edit documents belonging to Globex Inc\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eOrganizations should be isolated from each other.\u003c/p\u003e\n\u003ch3\u003eProblem 3: Sensitive Fields Exposed\u003c/h3\u003e\n\u003col\u003e\n\u003cli\u003eLog in as \u003ccode\u003eviewer@acme.com\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003eLook at any document\u0026#39;s details\u003c/li\u003e\n\u003cli\u003eYou can see \u003ccode\u003einternalNotes\u003c/code\u003e - a field meant only for admins!\u003c/li\u003e\n\u003c/ol\u003e\n\u003ch3\u003eProblem 4: Anyone Can Delete\u003c/h3\u003e\n\u003col\u003e\n\u003cli\u003eLog in as \u003ccode\u003eeditor@acme.com\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003eClick \u0026quot;Delete\u0026quot; on any document - it works!\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eOnly admins should be able to delete documents.\u003c/p\u003e\n\u003ch2\u003eDocument Fields\u003c/h2\u003e\n\u003cp\u003eHere are the fields on a document, and who \u003cem\u003eshould\u003c/em\u003e be able to access them:\u003c/p\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eField\u003c/th\u003e\n\u003cth\u003eViewer Read\u003c/th\u003e\n\u003cth\u003eEditor Read\u003c/th\u003e\n\u003cth\u003eAdmin Read\u003c/th\u003e\n\u003cth\u003eEditor Write\u003c/th\u003e\n\u003cth\u003eAdmin Write\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eid\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003etitle\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003econtent\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003estatus\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eauthorId\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003eorgId\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003einternalNotes\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003ccode\u003ecreatedAt\u003c/code\u003e\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003cp\u003eCurrently, everyone sees everything and can edit everything. We\u0026#39;ll fix that.\u003c/p\u003e\n\u003ch2\u003eThe API Routes\u003c/h2\u003e\n\u003cp\u003eHere are the routes we need to protect:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-text\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003eGET    /api/documents          - List all documents\nPOST   /api/documents          - Create a document\nGET    /api/documents/:id      - Get a single document\nPUT    /api/documents/:id      - Update a document\nDELETE /api/documents/:id      - Delete a document\n\nGET    /api/documents/:id/comments    - List comments\nPOST   /api/documents/:id/comments    - Create a comment\nDELETE /api/comments/:id              - Delete a comment\n\u003c/code\u003e\u003c/pre\u003e\u003ch2\u003eOur Goal\u003c/h2\u003e\n\u003cp\u003eBy the end of this workshop, we\u0026#39;ll have:\u003c/p\u003e\n\u003col\u003e\n\u003cli\u003e✅ Role-based route protection (RBAC)\u003c/li\u003e\n\u003cli\u003e✅ Ownership-based access (only edit your own documents)\u003c/li\u003e\n\u003cli\u003e✅ Organization isolation (can\u0026#39;t see other orgs\u0026#39; data)\u003c/li\u003e\n\u003cli\u003e✅ Field-level read permissions (hide sensitive fields)\u003c/li\u003e\n\u003cli\u003e✅ Field-level write permissions (prevent editing certain fields)\u003c/li\u003e\n\u003cli\u003e✅ A reusable permission library\u003c/li\u003e\n\u003cli\u003e✅ React components for UI permission checks\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eLet\u0026#39;s start by adding basic role-based access control.\u003c/p\u003e\n","markdown":"\n# Starter App Tour\n\nLet's explore the application we'll be adding permissions to throughout this workshop.\n\n## The Document Management System\n\nWe have a simple but realistic application: a **Document Management System** for organizations. It has:\n\n- **Users** with different roles (admin, editor, viewer)\n- **Organizations** (multi-tenant)\n- **Documents** with various fields and statuses\n- **Comments** on documents\n\n## Tech Stack\n\n- **Backend:** Express + TypeScript\n- **Database:** SQLite + Drizzle ORM\n- **Frontend:** React + TypeScript (Vite)\n- **Auth:** Session-based with cookies\n\n## Pre-Seeded Accounts\n\nThe app comes with test accounts you can log in with:\n\n| Email               | Password   | Role   | Organization |\n| ------------------- | ---------- | ------ | ------------ |\n| `admin@acme.com`    | `password` | Admin  | Acme Corp    |\n| `editor@acme.com`   | `password` | Editor | Acme Corp    |\n| `viewer@acme.com`   | `password` | Viewer | Acme Corp    |\n| `editor@globex.com` | `password` | Editor | Globex Inc   |\n| `admin@globex.com`  | `password` | Admin  | Globex Inc   |\n\n## Live Code: Starting the App\n\nLet's start the application and explore what's there:\n\n```bash\n# Install dependencies\nnpm install\n\n# Start the development servers\nnpm run dev\n```\n\nThis starts both the backend API (port 3001) and frontend (port 5173).\n\n## The Current Problem: No Permissions!\n\nRight now, the app has **zero permission checks**. Let's see why that's dangerous:\n\n### Problem 1: Anyone Can Edit Anything\n\n1. Log in as `viewer@acme.com`\n2. Navigate to any document\n3. Click \"Edit\" - it works!\n\nViewers shouldn't be able to edit documents, but there's no check preventing it.\n\n### Problem 2: Cross-Organization Access\n\n1. Log in as `editor@acme.com`\n2. You can see and edit documents belonging to Globex Inc\n\nOrganizations should be isolated from each other.\n\n### Problem 3: Sensitive Fields Exposed\n\n1. Log in as `viewer@acme.com`\n2. Look at any document's details\n3. You can see `internalNotes` - a field meant only for admins!\n\n### Problem 4: Anyone Can Delete\n\n1. Log in as `editor@acme.com`\n2. Click \"Delete\" on any document - it works!\n\nOnly admins should be able to delete documents.\n\n## Document Fields\n\nHere are the fields on a document, and who _should_ be able to access them:\n\n| Field           | Viewer Read | Editor Read | Admin Read | Editor Write | Admin Write |\n| --------------- | ----------- | ----------- | ---------- | ------------ | ----------- |\n| `id`            | ✅          | ✅          | ✅         | ❌           | ❌          |\n| `title`         | ✅          | ✅          | ✅         | ✅           | ✅          |\n| `content`       | ✅          | ✅          | ✅         | ✅           | ✅          |\n| `status`        | ✅          | ✅          | ✅         | ❌           | ✅          |\n| `authorId`      | ❌          | ✅          | ✅         | ❌           | ✅          |\n| `orgId`         | ❌          | ❌          | ✅         | ❌           | ✅          |\n| `internalNotes` | ❌          | ❌          | ✅         | ❌           | ✅          |\n| `createdAt`     | ✅          | ✅          | ✅         | ❌           | ❌          |\n\nCurrently, everyone sees everything and can edit everything. We'll fix that.\n\n## The API Routes\n\nHere are the routes we need to protect:\n\n```text\nGET    /api/documents          - List all documents\nPOST   /api/documents          - Create a document\nGET    /api/documents/:id      - Get a single document\nPUT    /api/documents/:id      - Update a document\nDELETE /api/documents/:id      - Delete a document\n\nGET    /api/documents/:id/comments    - List comments\nPOST   /api/documents/:id/comments    - Create a comment\nDELETE /api/comments/:id              - Delete a comment\n```\n\n## Our Goal\n\nBy the end of this workshop, we'll have:\n\n1. ✅ Role-based route protection (RBAC)\n2. ✅ Ownership-based access (only edit your own documents)\n3. ✅ Organization isolation (can't see other orgs' data)\n4. ✅ Field-level read permissions (hide sensitive fields)\n5. ✅ Field-level write permissions (prevent editing certain fields)\n6. ✅ A reusable permission library\n7. ✅ React components for UI permission checks\n\nLet's start by adding basic role-based access control.\n","slug":"starter-app-tour","title":"Starter App Tour","section":"Introduction","icon":"door-open","filePath":"/home/runner/work/fem-permission-systems-that-scale/fem-permission-systems-that-scale/lessons/01-introduction/C-starter-app-tour.md","nextSlug":"/fem-permission-systems-that-scale/lessons/introduction/permissions-table","prevSlug":"/fem-permission-systems-that-scale/lessons/introduction/permission-systems-overview"}},"__N_SSG":true},"page":"/lessons/[section]/[slug]","query":{"section":"introduction","slug":"starter-app-tour"},"buildId":"FYlJTMatlkWBhuBe6vCwC","assetPrefix":"/fem-permission-systems-that-scale","isFallback":false,"gsp":true,"scriptLoader":[]}</script></body></html>
