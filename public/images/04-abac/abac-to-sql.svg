@@ -1,0 +1,36 @@
+<svg viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="150" fill="#fafafa" />
+  <!-- ABAC Condition Box -->
+  <rect x="20" y="20" width="240" height="100" rx="6" fill="#1f2937" stroke="#8b5cf6"
+    stroke-width="2" />
+  <text x="140" y="45" text-anchor="middle" fill="#a78bfa" font-family="system-ui" font-size="12"
+    font-weight="bold">ABAC Conditions</text>
+  <text x="140" y="70" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="10">{
+    status: "published" }</text>
+  <text x="140" y="88" text-anchor="middle" fill="#64748b" font-family="system-ui" font-size="10">OR</text>
+  <text x="140" y="106" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="10">{
+    creatorId: userId }</text>
+
+  <!-- Arrow -->
+  <path d="M 270 70 L 320 70" stroke="#22c55e" stroke-width="3" marker-end="url(#arrowI)" />
+  <text x="295" y="60" text-anchor="middle" fill="#22c55e" font-family="system-ui" font-size="10">
+    toDrizzle</text>
+
+  <!-- SQL Box -->
+  <rect x="330" y="20" width="250" height="100" rx="6" fill="#1f2937" stroke="#22c55e"
+    stroke-width="2" />
+  <text x="455" y="45" text-anchor="middle" fill="#86efac" font-family="system-ui" font-size="12"
+    font-weight="bold">Database Query</text>
+  <text x="455" y="70" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="10">WHERE
+    status = 'published'</text>
+  <text x="455" y="88" text-anchor="middle" fill="#64748b" font-family="system-ui" font-size="10">OR</text>
+  <text x="455" y="106" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="10">creatorId
+    = ?</text>
+
+  <defs>
+    <marker id="arrowI" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+    </marker>
+  </defs>
+</svg>

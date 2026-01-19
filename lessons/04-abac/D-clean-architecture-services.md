@@ -51,20 +51,26 @@ export async function createDocumentService(
   projectId: string,
   data: DocumentFormValues,
 ) {
+  // Step 1: Authentication - who is making this request?
   const user = await getCurrentUser()
   if (user == null) throw new Error("Unauthenticated")
 
+  // Step 2: Authorization - can they perform this action?
   const permissions = await getUserPermissions()
   if (!permissions.can("document", "create")) throw new AuthorizationError()
 
+  // Step 3: Field filtering - only allow permitted fields
   const restrictedData = permissions.pickPermittedFields(
     "document",
     "create",
     data,
   )
+
+  // Step 4: Validation - is the data valid?
   const result = documentSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
 
+  // Step 5: Execute - perform the actual operation
   return await createDocument({
     ...result.data,
     creatorId: user.id,
@@ -153,19 +159,9 @@ By converting our auth permissions to a database query we are able to leverage t
 
 The key insight is that ABAC conditions can become `WHERE` clauses:
 
-```typescript
-// Permission condition
-{ status: "published" }
+![ABAC to SQL](/fem-permission-systems-that-scale/images/04-abac/abac-to-sql.svg)
 
-// Becomes database query
-WHERE status = 'published'
-
-// Multiple conditions from different permissions
-{ status: "published" } OR { status: "archived" } OR { creatorId: userId }
-
-// Becomes
-WHERE status = 'published' OR status = 'archived' OR creatorId = ?
-```
+This can get complicated when dealing with multiple conditions and various combinations of permissions, but once you get the base layer down adding new conditions is pretty simple.
 
 This is powerful because:
 

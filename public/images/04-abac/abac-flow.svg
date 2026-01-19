@@ -1,0 +1,62 @@
+<svg viewBox="0 0 650 250" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="650" height="250" fill="#fafafa" />
+  <!-- Subject box -->
+  <rect x="20" y="20" width="140" height="100" rx="8" fill="#3b82f6" stroke="#60a5fa"
+    stroke-width="2" />
+  <text x="90" y="45" text-anchor="middle" fill="white" font-family="system-ui" font-size="13"
+    font-weight="bold">Subject (User)</text>
+  <text x="90" y="68" text-anchor="middle" fill="white" font-family="monospace" font-size="10">role:
+    "author"</text>
+  <text x="90" y="83" text-anchor="middle" fill="white" font-family="monospace" font-size="10">department:
+    "eng"</text>
+  <text x="90" y="98" text-anchor="middle" fill="white" font-family="monospace" font-size="10">id:
+    "user_123"</text>
+
+  <!-- Resource box -->
+  <rect x="20" y="140" width="140" height="100" rx="8" fill="#8b5cf6" stroke="#a78bfa"
+    stroke-width="2" />
+  <text x="90" y="165" text-anchor="middle" fill="white" font-family="system-ui" font-size="13"
+    font-weight="bold">Resource (Doc)</text>
+  <text x="90" y="188" text-anchor="middle" fill="white" font-family="monospace" font-size="10">status:
+    "draft"</text>
+  <text x="90" y="203" text-anchor="middle" fill="white" font-family="monospace" font-size="10">isLocked:
+    false</text>
+  <text x="90" y="218" text-anchor="middle" fill="white" font-family="monospace" font-size="10">creatorId:
+    "user_123"</text>
+
+  <!-- Policy Engine box -->
+  <rect x="240" y="80" width="160" height="100" rx="8" fill="#0d9488" stroke="#2dd4bf"
+    stroke-width="2" />
+  <text x="320" y="110" text-anchor="middle" fill="white" font-family="system-ui" font-size="13"
+    font-weight="bold">Policy Engine</text>
+  <text x="320" y="135" text-anchor="middle" fill="white" font-family="monospace" font-size="10">if
+    creator === userId</text>
+  <text x="320" y="150" text-anchor="middle" fill="white" font-family="monospace" font-size="10">&amp;&amp;
+    !isLocked</text>
+  <text x="320" y="165" text-anchor="middle" fill="white" font-family="monospace" font-size="10">→
+    allow update</text>
+
+  <!-- Decision box -->
+  <rect x="480" y="100" width="140" height="60" rx="8" fill="#059669" stroke="#34d399"
+    stroke-width="2" />
+  <text x="550" y="137" text-anchor="middle" fill="white" font-family="system-ui" font-size="14"
+    font-weight="bold">✓ ALLOW</text>
+
+  <!-- Arrows -->
+  <path d="M 160 70 L 230 110" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow1)" />
+  <path d="M 160 190 L 230 150" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow2)" />
+  <path d="M 400 130 L 470 130" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrow3)" />
+
+  <defs>
+    <marker id="arrow1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+    </marker>
+    <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" />
+    </marker>
+    <marker id="arrow3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2dd4bf" />
+    </marker>
+  </defs>
+</svg>

@@ -28,6 +28,33 @@ There are multiple places where our permission checks are wrong.
 | `app/(dashboard)/projects/[projectId]/page.tsx` | Admins should be able to view the new document button |
 | `dal/documents/mutations.ts`                    | Viewers should not be able to create documents        |
 
+## Example Fix
+
+Here's an example of adding a missing permission check:
+
+```typescript
+// Before: No permission check!
+export default async function ProjectEditPage({ params }) {
+  const project = await getProjectById(params.projectId)
+  return <ProjectForm project={project} />
+}
+
+// After: Check user role before rendering
+export default async function ProjectEditPage({ params }) {
+  const user = await getCurrentUser()
+
+  // Only admins can edit projects
+  if (user?.role !== "admin") {
+    return redirect("/")
+  }
+
+  const project = await getProjectById(params.projectId)
+  return <ProjectForm project={project} />
+}
+```
+
+Notice the pattern: check permissions **before** fetching data or rendering the page.
+
 ## The Problem With This System
 
 As we add these checks, notice how we're:

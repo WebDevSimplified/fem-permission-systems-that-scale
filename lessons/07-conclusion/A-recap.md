@@ -67,14 +67,14 @@ const canView = await checkRelationship(user, "viewer", document)
 
 ## Quick Decision Guide
 
-| Scenario | Recommended Model |
-|----------|-------------------|
-| Simple app with admin/user roles | RBAC |
-| Users can only edit their own content | ABAC |
-| Permissions vary by department/location | ABAC |
-| Google Drive-style sharing | ReBAC |
-| Folder → file permission inheritance | ReBAC |
-| Enterprise with complex org structure | ABAC or ReBAC |
+| Scenario                                | Recommended Model |
+| --------------------------------------- | ----------------- |
+| Simple app with admin/user roles        | RBAC              |
+| Users can only edit their own content   | ABAC              |
+| Permissions vary by department/location | ABAC              |
+| Google Drive-style sharing              | ReBAC             |
+| Folder → file permission inheritance    | ReBAC             |
+| Enterprise with complex org structure   | ABAC or ReBAC     |
 
 ## They're Not Mutually Exclusive
 

@@ -14,35 +14,23 @@ npm install @casl/ability
 
 ## Updating the Permission Module
 
-Here's how our `abac.ts` file transforms to use CASL:
+### Key Changes
 
-### Before (Custom Implementation)
+Here's what changes when migrating to CASL:
 
 ```typescript
-class PermissionBuilder {
-  // ... custom logic
-}
+// BEFORE (custom): resource first, action second
+builder.can("document", "read")
+builder.can("document", "read", { status: "published" }, ["title", "content"])
 
-async function getUserPermissionsInternal(user: User) {
-  const builder = new PermissionBuilder()
-
-  if (user.role === "admin") {
-    builder.can("document", "read")
-    builder.can("project", "read")
-  }
-
-  if (user.role === "viewer") {
-    builder.can("document", "read", { status: "published" }, [
-      "title",
-      "content",
-    ])
-  }
-
-  return builder.build()
-}
+// AFTER (CASL): action first, resource second, fields before conditions
+can("read", "document")
+can("read", "document", ["title", "content"], { status: "published" })
 ```
 
-### After (CASL)
+### Type Setup
+
+CASL needs types to understand your resources which are broken down into subjects and actions:
 
 ```typescript
 type FullCRUD = "create" | "read" | "update" | "delete"
@@ -54,19 +42,24 @@ type DocumentSubject =
 type MyAbility = MongoAbility<
   [FullCRUD, ProjectSubject] | [FullCRUD, DocumentSubject]
 >
+```
 
+### Building Permissions
+
+```typescript
 async function getUserPermissionsInternal(user: User) {
   const { can: allow, build } = new AbilityBuilder<MyAbility>(
     createMongoAbility,
   )
 
   if (user.role === "admin") {
-    can("read", "document")
-    can("read", "project")
+    allow("read", "document")
+    allow("read", "project")
   }
 
   if (user.role === "viewer") {
-    can("read", "document", ["title", "content"], { status: "published" })
+    // Fields come BEFORE conditions in CASL
+    allow("read", "document", ["title", "content"], { status: "published" })
   }
 
   return build()
@@ -75,20 +68,18 @@ async function getUserPermissionsInternal(user: User) {
 
 ## Using CASL in Components
 
-The usage pattern is almost identical:
+The usage pattern is almost identical, with one key difference:
 
 ```typescript
-// Before (custom)
-const permissions = await getUserPermissions()
+// Custom: pass object directly
 if (permissions.can("document", "update", document)) {
   // ...
 }
 
-// After (CASL)
+// CASL: wrap object with subject() helper
 import { subject } from "@casl/ability"
 
-const permissions = await getUserPermissions()
-if (permissions.can("update", subject("document", document))) {
+if (ability.can("update", subject("document", document))) {
   // ...
 }
 ```
@@ -98,6 +89,8 @@ Note the differences:
 1. Resource and action order is swapped: `can("update", "document")` vs `permissions.can("document", "update")`
 2. Use `subject()` helper to wrap data for condition checking
 
+> Why the `subject()` wrapper? CASL needs to know what _type_ of object you're checking. Our custom implementation knew because we passed the resource name first. CASL uses class names by default, but since we're using plain objects, we need to tell it explicitly.
+
 ## Field-Level Permissions with CASL
 
 CASL has built-in support for field permissions:
@@ -105,7 +98,6 @@ CASL has built-in support for field permissions:
 ```typescript
 // Define which fields each permission applies to
 can("update", "document", ["title", "content", "status"], { isLocked: false })
-can("update", "document", ["title", "content"], { isLocked: false }) // More restricted
 
 // Check field permission
 ability.can("update", subject("document", document), "status")
@@ -115,25 +107,27 @@ ability.can("update", subject("document", document), "status")
 
 ### 1. Rule Serialization
 
-You can serialize CASL permissions to a JSON object and send them to the client or use them in other parts of your application:
+You can serialize CASL permissions to JSON and send them to the client:
 
 ```typescript
-// Send ability rules to the client
+// Server: send ability rules to the client
 const permissions = await getUserPermissions()
 const rules = permissions.rules
 
-// Recreate ability on client
+// Client: recreate ability from rules
 import { createMongoAbility } from "@casl/ability"
 const clientPermissions = createMongoAbility(rules)
 ```
 
+This enables client-side permission checks without an API call.
+
 ### 2. Advanced Conditions
 
-CASL allows you to define complex conditions for permissions. For example, you can check not equal, in array, etc.
+CASL supports MongoDB-style query operators:
 
 ```typescript
-can("read", "document", { status: { $ne: "archived" } })
-can("read", "document", { status: { $in: ["published", "draft"] } })
+can("read", "document", { status: { $ne: "archived" } }) // not equal
+can("read", "document", { status: { $in: ["published", "draft"] } }) // in array
 ```
 
 ## CASL Drawbacks
@@ -142,11 +136,43 @@ CASL is great at many things, but since it was created as a backend Node focused
 
 ### 1. Reliance on Classes
 
-CASL uses class names to determine which permissions to check on an object which is why our permissions do not work by default since we aren't using classes. Instead, we need to wrap everything in a `subject()` call to tell CASL what type our object.
+CASL uses class names to determine which permissions to check on an object. Since we're using plain objects (not class instances), permissions don't work by default which is why we need the `subject()` wrapper everywhere.
 
 ### 2. React Server Component Compatibility
 
-The `subject()` function unfortunately, mutates our objects in a way that is incompatible with React Server components. To get around this you need to spread a new object into `subject()` like `subject("document", { ...document })`. Another option is to use the `detectSubjectType` build option which is what we will be doing.
+The `subject()` function unfortunately, mutates our objects in a way that is incompatible with React Server components. There are two workarounds:
+
+**Option A: Spread into a new object**
+
+```typescript
+// Always create a new object before passing to subject()
+ability.can("update", subject("document", { ...document }))
+```
+
+**Option B: Use `detectSubjectType`**
+
+Configure CASL to detect subject types without mutation:
+
+```typescript
+const ability = createMongoAbility(rules, {
+  detectSubjectType: (object) => {
+    // Check for a type property we add ourselves
+    if (object && typeof object === "object" && "__typename" in object) {
+      return object.__typename as string
+    }
+    return undefined
+  },
+})
+
+// In your queries, add __typename to returned objects
+const document = await db.query.documents.findFirst({
+  where: eq(documents.id, id),
+})
+
+return { ...document, __typename: "document" as const }
+```
+
+This approach adds a small overhead but makes consuming CASL permissions easier.
 
 ## Branch Checkpoint
 

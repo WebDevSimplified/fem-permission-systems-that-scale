@@ -1,0 +1,49 @@
+<svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="180" fill="#fafafa" />
+  <!-- User box -->
+  <rect x="20" y="60" width="100" height="60" rx="8" fill="#3b82f6" stroke="#60a5fa"
+    stroke-width="2" />
+  <text x="70" y="95" text-anchor="middle" fill="white" font-family="system-ui" font-size="14"
+    font-weight="bold">User</text>
+
+  <!-- Arrow 1 -->
+  <path d="M 120 90 L 170 90" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)" />
+  <text x="145" y="80" text-anchor="middle" fill="#94a3b8" font-family="system-ui" font-size="11">
+    has</text>
+
+  <!-- Role box -->
+  <rect x="180" y="60" width="100" height="60" rx="8" fill="#8b5cf6" stroke="#a78bfa"
+    stroke-width="2" />
+  <text x="230" y="95" text-anchor="middle" fill="white" font-family="system-ui" font-size="14"
+    font-weight="bold">Role</text>
+
+  <!-- Arrow 2 -->
+  <path d="M 280 90 L 330 90" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrowhead2)" />
+  <text x="305" y="80" text-anchor="middle" fill="#94a3b8" font-family="system-ui" font-size="11">
+    grants</text>
+
+  <!-- Permissions box (larger) -->
+  <rect x="340" y="30" width="240" height="120" rx="8" fill="#059669" stroke="#34d399"
+    stroke-width="2" />
+  <text x="460" y="55" text-anchor="middle" fill="white" font-family="system-ui" font-size="14"
+    font-weight="bold">Permissions</text>
+  <text x="460" y="80" text-anchor="middle" fill="#d1fae5" font-family="monospace" font-size="11">
+    document:create</text>
+  <text x="460" y="98" text-anchor="middle" fill="#d1fae5" font-family="monospace" font-size="11">
+    document:read</text>
+  <text x="460" y="116" text-anchor="middle" fill="#d1fae5" font-family="monospace" font-size="11">
+    project:update</text>
+  <text x="460" y="134" text-anchor="middle" fill="#d1fae5" font-family="monospace" font-size="11">
+    ...</text>
+
+  <!-- Arrowhead markers -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+    </marker>
+    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" />
+    </marker>
+  </defs>
+</svg>

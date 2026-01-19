@@ -32,9 +32,33 @@ if (!permissions.can("document", "update", document)) {
 }
 ```
 
+## How ABAC Works
+
+In ABAC, we evaluate **attributes** from multiple sources to make access decisions:
+
+![ABAC Flow](/fem-permission-systems-that-scale/images/04-abac/abac-flow.svg)
+
+Policies evaluate attributes from both subject and resource to make decisions. The key difference from RBAC: instead of looking up permissions by role alone, we evaluate **conditions** against the actual data at runtime.
+
 ## Step 1: Create the ABAC Module
 
-We'll create a new permissions file that defines policies using conditions:
+Here's the core idea in minimal code:
+
+```typescript
+// 1. Build permissions with conditions
+const builder = new PermissionBuilder()
+builder.allow("document", "update", { creatorId: user.id, isLocked: false })
+const permissions = builder.build()
+
+// 2. Check against actual resource data
+permissions.can("document", "update", document) // true if all conditions match
+```
+
+The `allow()` call says "this user can update documents **where** they're the creator AND it's not locked." The `can()` call evaluates those conditions against the actual document.
+
+### The Entry Point
+
+We'll create `src/permissions/abac.ts`. The entry point routes to role-specific policy builders:
 
 ```typescript
 // src/permissions/abac.ts
@@ -47,23 +71,7 @@ export function getUserPermissions(
   const builder = new PermissionBuilder()
   if (user == null) return builder.build()
 
-  const role = user.role
-  switch (role) {
-    case "admin":
-      addAdminPermissions(builder)
-      break
-    case "author":
-      addAuthorPermissions(builder, user)
-      break
-    case "editor":
-      addEditorPermissions(builder, user)
-      break
-    case "viewer":
-      addViewerPermissions(builder, user)
-      break
-    default:
-      throw new Error(`Unknown role: ${role satisfies never}`)
-  }
+  // Add role-specific permissions...
 
   return builder.build()
 }
@@ -71,72 +79,29 @@ export function getUserPermissions(
 
 ## Step 2: Define Role-Specific Policies
 
-Each role gets its own policy function with appropriate conditions:
+Next we need to define the policies for each role.
+
+### Editor Permissions Example
 
 ```typescript
-function addAdminPermissions(builder: PermissionBuilder) {
-  builder
-    .allow("project", "read")
-    .allow("project", "create")
-    .allow("project", "update")
-    .allow("project", "delete")
-    .allow("document", "read")
-    .allow("document", "create")
-    .allow("document", "update")
-    .allow("document", "delete")
-}
-
-function addEditorPermissions(
-  builder: PermissionBuilder,
-  user: Pick<User, "department">,
-) {
-  builder
-    // Can read projects in their department or global projects
-    .allow("project", "read", { department: user.department })
-    .allow("project", "read", { department: null })
-    // Can read all documents, edit unlocked ones
-    .allow("document", "read")
-    .allow("document", "update", { isLocked: false })
-}
-
-function addAuthorPermissions(
-  builder: PermissionBuilder,
-  user: Pick<User, "department" | "id">,
-) {
-  builder
-    .allow("project", "read", { department: user.department })
-    .allow("project", "read", { department: null })
-    // Can only read published/archived, or their own drafts
-    .allow("document", "read", { status: "published" })
-    .allow("document", "read", { status: "archived" })
-    .allow("document", "read", { status: "draft", creatorId: user.id })
-    // Can create documents
-    .allow("document", "create")
-    // Can only edit their own unlocked drafts
-    .allow("document", "update", {
-      creatorId: user.id,
-      isLocked: false,
-      status: "draft",
-    })
-}
-
-function addViewerPermissions(
-  builder: PermissionBuilder,
-  user: Pick<User, "department">,
-) {
-  builder
-    .allow("project", "read", { department: user.department })
-    .allow("project", "read", { department: null })
-    .allow("document", "read", { status: "published" })
-    .allow("document", "read", { status: "archived" })
-}
+builder
+  // Can read projects in their department or global projects
+  .allow("project", "read", { department: user.department })
+  .allow("project", "read", { department: null })
+  // Can read all documents, edit unlocked ones
+  .allow("document", "read")
+  .allow("document", "update", { isLocked: false })
 ```
 
-Notice how the conditions are **declarative**—we're describing **what** is allowed, not **how** to check it.
+Look at that last `.allow()` call: "editors can update documents that are unlocked." In RBAC, this would require a helper function with manual attribute checks. In ABAC, it's declarative.
 
 ## Step 3: The Permission Builder
 
-The builder pattern makes policies easy to compose:
+The builder pattern makes policies easy to compose. Let's build it piece by piece.
+
+### Type Definitions
+
+First, we define what resources exist and what attributes they have:
 
 ```typescript
 type Resources = {
@@ -149,7 +114,15 @@ type Resources = {
     condition: Pick<Document, "projectId" | "creatorId" | "status" | "isLocked">
   }
 }
+```
 
+This gives us type safety: TypeScript knows that `project` conditions can only include `department`, while `document` conditions can include `status`, `isLocked`, etc.
+
+### The `allow()` Method
+
+The `allow()` method accumulates permission rules:
+
+```typescript
 class PermissionBuilder {
   #permissions: PermissionStore = {
     project: [],
@@ -162,37 +135,50 @@ class PermissionBuilder {
     condition?: Partial<Resources[Res]["condition"]>,
   ) {
     this.#permissions[resource].push({ action, condition })
-    return this
-  }
-
-  build() {
-    const permissions = this.#permissions
-
-    return {
-      can<Res extends keyof Resources>(
-        resource: Res,
-        action: Resources[Res]["action"],
-        data?: Resources[Res]["condition"],
-      ) {
-        return permissions[resource].some((perm) => {
-          if (perm.action !== action) return false
-
-          // No condition means always allowed for this action
-          if (perm.condition == null) return true
-
-          // No data provided means check action permission only
-          if (data == null) return true
-
-          // Check all conditions match the resource
-          return Object.entries(perm.condition).every(
-            ([key, value]) => data[key as keyof typeof data] === value,
-          )
-        })
-      },
-    }
+    return this // Enable chaining: .allow(...).allow(...)
   }
 }
 ```
+
+### The `can()` Method
+
+The `can()` method is where the magic happens—it evaluates conditions against actual data:
+
+```typescript
+build() {
+  const permissions = this.#permissions
+
+  return {
+    can<Res extends keyof Resources>(
+      resource: Res,
+      action: Resources[Res]["action"],
+      data?: Resources[Res]["condition"],
+    ) {
+      return permissions[resource].some((perm) => {
+        // Must match the requested action
+        if (perm.action !== action) return false
+
+        // No condition = always allowed for this action
+        if (perm.condition == null) return true
+
+        // No data provided = just checking if action is possible
+        if (data == null) return true
+
+        // Check all conditions match the resource
+        return Object.entries(perm.condition).every(
+          ([key, value]) => data[key as keyof typeof data] === value,
+        )
+      })
+    },
+  }
+}
+```
+
+The algorithm:
+
+1. Find any permission matching the action
+2. If that permission has no conditions, allow immediately
+3. Otherwise, verify every condition matches the resource's attributes
 
 ## Step 4: Update the Codebase
 

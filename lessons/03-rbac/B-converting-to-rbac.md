@@ -34,9 +34,21 @@ if (!can(user, "document:create")) {
 }
 ```
 
+## How RBAC Works
+
+Before we write code, let's visualize what we're building:
+
+![RBAC Flow](/fem-permission-systems-that-scale/images/03-rbac/rbac-flow.svg)
+
+The role acts as an indirection layer between users and permissions. Instead of scattering role checks everywhere, we create a **lookup table** that maps roles to permissions, then check against that table.
+
 ## Step 1: Create the Permissions Module
 
-We'll create a new file that defines all permissions and the role mappings:
+We'll create a new file `src/permissions/rbac.ts` and build it piece by piece.
+
+### Part 1: Define the Permission Type
+
+First, we define all possible permissions as a TypeScript union type:
 
 ```typescript
 // src/permissions/rbac.ts
@@ -54,7 +66,15 @@ type Permission =
   | "document:read"
   | "document:update"
   | "document:delete"
+```
 
+Using a union type means TypeScript will catch typos like `"documnet:create"` at compile time—a huge win over string literals scattered throughout your codebase.
+
+### Part 2: Map Roles to Permissions
+
+Next, we create the lookup table—this is the heart of RBAC:
+
+```typescript
 const permissionsByRole: Record<User["role"], Permission[]> = {
   admin: [
     "project:create",
@@ -85,7 +105,15 @@ const permissionsByRole: Record<User["role"], Permission[]> = {
     "document:read",
   ],
 }
+```
 
+Now when requirements change—say, authors should be able to delete their own documents—you update **one place** instead of hunting through dozens of files.
+
+### Part 3: The `can` Function
+
+Finally, a simple function to check permissions:
+
+```typescript
 export function can(
   user: Pick<User, "role"> | null,
   permission: Permission,
@@ -95,6 +123,8 @@ export function can(
 }
 ```
 
+> 💡 We use `Pick<User, "role">` instead of the full `User` type. This makes the function flexible since you don't need a full user object to call the function.
+
 ## Step 2: Handle Complex Permission Logic
 
 Some permissions aren't purely role-based. For example, "can read project" depends on:
@@ -103,7 +133,7 @@ Some permissions aren't purely role-based. For example, "can read project" depen
 - The user's department
 - The project's department
 
-We create helper functions for these:
+This is where pure RBAC starts to show cracks. We need helper functions that mix role checks with attribute checks:
 
 ```typescript
 // src/permissions/projects.ts
@@ -126,7 +156,7 @@ export function canReadProject(
 }
 ```
 
-Notice how we're already mixing RBAC (`can(user, "permission")`) with attribute checks (`project.department === user.department`). This is a hint of what's to come.
+> ⚠️ Notice how we're already mixing RBAC (`can(user, "permission")`) with attribute checks (`project.department === user.department`). This hybrid approach works, but it's a sign that pure RBAC may not be enough for our needs.
 
 ## Step 3: Update the Codebase
 
