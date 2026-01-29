@@ -140,6 +140,22 @@ function canEdit(user, resource) {
 }
 ```
 
+## Goals of a Permission System
+
+Before diving into the code, it's important to understand what a well-designed permission system should look like:
+
+- **Impossible to access unauthorized data**: This means all data access should go through auth checks before any data is returned or modified.
+
+- **Single source of truth**: Permission logic should be centralized in one place, not scattered throughout your codebase. This makes it easier to audit, update, and reason about.
+
+- **Automatic enforcement**: Authorization should be automatically applied whenever data is accessed or mutated. Developers shouldn't need to remember to add permission checks manually. They should happen by default.
+
+- **Consistent across frontend and backend**: The same permission rules should produce the same results whether evaluated on the client or server. This prevents confusing UX where buttons appear enabled but actions fail.
+
+- **Never trust the client**: All permission checks must be enforced on the server. Client-side checks are only for UX (hiding buttons, disabling fields) and never for actual security.
+
+- **Fail closed**: When in doubt, deny access. If something goes wrong or a check is missing, the default should be to block access rather than allow it.
+
 ## Key Takeaways
 
 - **RBAC** is simple but limited — great for basic apps with clear roles
