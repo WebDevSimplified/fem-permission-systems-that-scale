@@ -1,0 +1,663 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width" data-next-head=""/><link rel="apple-touch-icon" sizes="180x180" href="/fem-permission-systems-that-scale/images/apple-touch-icon.png" data-next-head=""/><link rel="icon" type="image/png" sizes="32x32" href="/fem-permission-systems-that-scale/images/favicon-32x32.png" data-next-head=""/><link rel="icon" type="image/png" sizes="16x16" href="/fem-permission-systems-that-scale/images/favicon-16x16.png" data-next-head=""/><link rel="icon" type="image/png" sizes="16x16" href="/fem-permission-systems-that-scale/images/favicon-16x16.png" data-next-head=""/><link rel="icon" type="image/x-icon" href="/fem-permission-systems-that-scale/images/favicon.ico" data-next-head=""/><title data-next-head="">Choosing the Right Permission Model – Permission Systems that Scale</title><meta name="description" content="Learn how to implement robust permission systems in your web applications. Master RBAC, ABAC, field-level permissions, and build your own authorization engine from scratch using TypeScript." data-next-head=""/><meta name="keywords" content="Permissions,Authorization,RBAC,ABAC,Access Control,TypeScript,Security,CASL,Web Dev Simplified,Frontend Masters" data-next-head=""/><meta name="og:description" content="Learn how to implement robust permission systems in your web applications. Master RBAC, ABAC, field-level permissions, and build your own authorization engine from scratch using TypeScript." data-next-head=""/><meta name="og:title" content="Choosing the Right Permission Model – Permission Systems that Scale" data-next-head=""/><meta name="og:image" content="/fem-permission-systems-that-scale/images/social-share-cover.jpg" data-next-head=""/><meta name="twitter:card" content="summary_large_image" data-next-head=""/><link data-next-font="size-adjust" rel="preconnect" href="/" crossorigin="anonymous"/><link rel="preload" href="/fem-permission-systems-that-scale/_next/static/css/3e2d260a483e4ce6.css" as="style"/><link rel="stylesheet" href="/fem-permission-systems-that-scale/_next/static/css/3e2d260a483e4ce6.css" data-n-g=""/><noscript data-n-css=""></noscript><script defer="" noModule="" src="/fem-permission-systems-that-scale/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/webpack-561d6b920ac5fc2e.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/framework-2f335d22a7318891.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/main-8377b0572add80b6.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/pages/_app-ab9f88be91011ccd.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/chunks/pages/lessons/%5Bsection%5D/%5Bslug%5D-c23b0a3ff434a742.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/0pmNDTvP7unAQwKbvWq8S/_buildManifest.js" defer=""></script><script src="/fem-permission-systems-that-scale/_next/static/0pmNDTvP7unAQwKbvWq8S/_ssgManifest.js" defer=""></script></head><body><div id="__next"><div class="remix-app"><header class="navbar"><h1 class="navbar-brand"><a href="/fem-permission-systems-that-scale">Permission Systems that Scale</a></h1><div class="navbar-info"></div></header><div class="content-container"><div class="main"><div class="lesson-container"><div class="lesson"><div class="lesson-content"><p>Let&#39;s recap what we&#39;ve learned, how our codebase evolved, and when to use each authorization approach.</p>
+<h2>Remembering Our Goals</h2>
+<p>At the start of this workshop, we established what a well-designed permission system should achieve:</p>
+<ul>
+<li><strong>Prevent unauthorized access</strong></li>
+<li><strong>Single source of truth</strong></li>
+<li><strong>Automatic enforcement</strong></li>
+<li><strong>Consistent across frontend and backend</strong></li>
+<li><strong>Never trust the client</strong></li>
+<li><strong>Fail closed</strong></li>
+</ul>
+<p>All of our systems by default fail closed so we don&#39;t have to worry about that, but we will analyze how each evolution of our codebase addressed (or failed to address) these goals.</p>
+<h2>The Evolution of Our Permission System</h2>
+<h3>Stage 1: Basic Permissions (Scattered Checks)</h3>
+<p><strong>Branch:</strong> <code>1-basic-permissions</code></p>
+<p>We started with permission checks scattered throughout the codebase and no central policy system:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-comment">// In a page component</span>
+<span class="hljs-keyword">if</span> (user.<span class="hljs-property">role</span> !== <span class="hljs-string">&quot;admin&quot;</span> &amp;&amp; user.<span class="hljs-property">role</span> !== <span class="hljs-string">&quot;author&quot;</span>) {
+  <span class="hljs-keyword">return</span> <span class="hljs-title function_">redirect</span>(<span class="hljs-string">&quot;/&quot;</span>)
+}
+
+<span class="hljs-comment">// In another file - slightly different logic</span>
+<span class="hljs-keyword">if</span> (user.<span class="hljs-property">role</span> === <span class="hljs-string">&quot;viewer&quot;</span> || user.<span class="hljs-property">role</span> === <span class="hljs-string">&quot;editor&quot;</span>) {
+  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">&quot;Unauthorized&quot;</span>)
+}
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>❌</td>
+<td>Missing checks on several pages</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>❌</td>
+<td>Logic scattered everywhere</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>❌</td>
+<td>Developers must remember to add checks</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>❌</td>
+<td>Different logic in different places</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>❌</td>
+<td>Some pages relied only on UI hiding</td>
+</tr>
+</tbody></table>
+<h3>Stage 2: Fixing Permission Bugs</h3>
+<p><strong>Branch:</strong> <code>2-fix-basic-permission-errors</code></p>
+<p>We added missing permission checks to all vulnerable pages and fixed incorrect permission logic.</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-comment">// Added proper server-side checks</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">DocumentDetailPage</span>(<span class="hljs-params">{ params }</span>) {
+  <span class="hljs-keyword">const</span> user = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getCurrentUser</span>()
+  <span class="hljs-keyword">const</span> project = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getProjectById</span>(params.<span class="hljs-property">projectId</span>)
+
+  <span class="hljs-keyword">if</span> (
+    user == <span class="hljs-literal">null</span> ||
+    (user.<span class="hljs-property">role</span> !== <span class="hljs-string">&quot;admin&quot;</span> &amp;&amp;
+      project.<span class="hljs-property">department</span> != <span class="hljs-literal">null</span> &amp;&amp;
+      user.<span class="hljs-property">department</span> !== project.<span class="hljs-property">department</span>)
+  ) {
+    <span class="hljs-keyword">return</span> <span class="hljs-title function_">redirect</span>(<span class="hljs-string">&quot;/&quot;</span>)
+  }
+  <span class="hljs-comment">// ...</span>
+}
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>All pages now have checks</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>❌</td>
+<td>Still duplicated everywhere</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>❌</td>
+<td>Still manual</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>❌</td>
+<td>Copy-paste prone to drift</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Server checks in place</td>
+</tr>
+</tbody></table>
+<p><strong>The core problem:</strong> We fixed the symptoms but not the root cause. Adding a new permission rule meant updating every file.</p>
+<h3>Stage 3: Services Layer</h3>
+<p><strong>Branch:</strong> <code>3-add-service-layer</code></p>
+<p>We introduced a <strong>services layer</strong> that centralizes business logic and authorization:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-comment">// Services handle auth + business logic</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">createDocumentService</span>(<span class="hljs-params">
+  <span class="hljs-attr">projectId</span>: <span class="hljs-built_in">string</span>,
+  <span class="hljs-attr">data</span>: <span class="hljs-title class_">DocumentFormValues</span>,
+</span>) {
+  <span class="hljs-keyword">const</span> user = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getCurrentUser</span>()
+  <span class="hljs-keyword">if</span> (user == <span class="hljs-literal">null</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">&quot;Unauthenticated&quot;</span>)
+
+  <span class="hljs-comment">// Step 1: Authorization - can they perform this action?</span>
+  <span class="hljs-keyword">const</span> permissions = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getUserPermissions</span>()
+  <span class="hljs-keyword">if</span> (!permissions.<span class="hljs-title function_">can</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;create&quot;</span>)) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AuthorizationError</span>()
+
+  <span class="hljs-comment">// Step 2: Validation - is the data valid?</span>
+  <span class="hljs-keyword">const</span> result = documentSchema.<span class="hljs-title function_">safeParse</span>(data)
+  <span class="hljs-keyword">if</span> (!result.<span class="hljs-property">success</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">&quot;Invalid data&quot;</span>)
+
+  <span class="hljs-comment">// Step 3: Execute - perform the actual operation</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-title function_">createDocument</span>({
+    ...result.<span class="hljs-property">data</span>,
+    <span class="hljs-attr">creatorId</span>: user.<span class="hljs-property">id</span>,
+    <span class="hljs-attr">lastEditedById</span>: user.<span class="hljs-property">id</span>,
+    projectId,
+  })
+}
+
+<span class="hljs-comment">// Actions become thin wrappers</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">createDocumentAction</span>(<span class="hljs-params">
+  <span class="hljs-attr">projectId</span>: <span class="hljs-built_in">string</span>,
+  <span class="hljs-attr">data</span>: <span class="hljs-title class_">DocumentFormValues</span>,
+</span>) {
+  <span class="hljs-keyword">const</span> [error, <span class="hljs-variable language_">document</span>] = <span class="hljs-keyword">await</span> <span class="hljs-title function_">tryFn</span>(<span class="hljs-function">() =&gt;</span>
+    <span class="hljs-title function_">createDocumentService</span>(projectId, data),
+  )
+  <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> error
+  <span class="hljs-title function_">redirect</span>(<span class="hljs-string">`/projects/<span class="hljs-subst">${projectId}</span>/documents/<span class="hljs-subst">${<span class="hljs-variable language_">document</span>.id}</span>`</span>)
+}
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>Services enforce all access</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>⚠️</td>
+<td>Better, but still lots of duplication</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>✅</td>
+<td>Services automatically enforce permissions</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>❌</td>
+<td>Checks on the client are still copy-paste error prone</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Services run server-side</td>
+</tr>
+</tbody></table>
+<p><strong>Key insight:</strong> The services layer gave us <strong>security by default</strong> as long as all data access goes through services.</p>
+<h3>Stage 4: Basic RBAC</h3>
+<p><strong>Branch:</strong> <code>4-basic-rbac</code></p>
+<p>We created a centralized permission system where roles map to permissions:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">type</span> <span class="hljs-title class_">Permission</span> =
+  | <span class="hljs-string">&quot;document:create&quot;</span>
+  | <span class="hljs-string">&quot;document:read&quot;</span>
+  | <span class="hljs-string">&quot;document:update&quot;</span>
+  | <span class="hljs-string">&quot;document:delete&quot;</span>
+
+<span class="hljs-keyword">const</span> <span class="hljs-attr">permissionsByRole</span>: <span class="hljs-title class_">Record</span>&lt;<span class="hljs-title class_">UserRole</span>, <span class="hljs-title class_">Permission</span>[]&gt; = {
+  <span class="hljs-attr">admin</span>: [
+    <span class="hljs-string">&quot;document:create&quot;</span>,
+    <span class="hljs-string">&quot;document:read&quot;</span>,
+    <span class="hljs-string">&quot;document:update&quot;</span>,
+    <span class="hljs-string">&quot;document:delete&quot;</span>,
+  ],
+  <span class="hljs-attr">editor</span>: [<span class="hljs-string">&quot;document:read&quot;</span>, <span class="hljs-string">&quot;document:update&quot;</span>],
+  <span class="hljs-attr">author</span>: [<span class="hljs-string">&quot;document:create&quot;</span>, <span class="hljs-string">&quot;document:read&quot;</span>],
+  <span class="hljs-attr">viewer</span>: [<span class="hljs-string">&quot;document:read&quot;</span>],
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">can</span>(<span class="hljs-params"><span class="hljs-attr">user</span>: { role: UserRole }, <span class="hljs-attr">permission</span>: <span class="hljs-title class_">Permission</span></span>) {
+  <span class="hljs-keyword">return</span> permissionsByRole[user.<span class="hljs-property">role</span>].<span class="hljs-title function_">includes</span>(permission)
+}
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>Services enforce all access</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>⚠️</td>
+<td>Permissions are centralized, but still require helper functions</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>✅</td>
+<td>Services automatically enforce permissions</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>✅</td>
+<td>Same <code>can()</code> function everywhere</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Server-enforced</td>
+</tr>
+</tbody></table>
+<h3>Stage 5: RBAC Limitations Exposed</h3>
+<p><strong>Branch:</strong> <code>5-rbac-limits</code></p>
+<p>When we added more realistic requirements, RBAC struggled:</p>
+<blockquote>
+<p>&quot;Authors can edit documents <strong>they created</strong>, that are <strong>not locked</strong>, in <strong>draft status</strong>&quot;</p>
+</blockquote>
+<p>This forced us to create exploding permission names:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">type</span> <span class="hljs-title class_">Permission</span> =
+  | <span class="hljs-string">&quot;document:update:all&quot;</span>
+  | <span class="hljs-string">&quot;document:update:unlocked&quot;</span>
+  | <span class="hljs-string">&quot;document:update:own-unlocked-draft&quot;</span>
+  | <span class="hljs-string">&quot;document:read:all&quot;</span>
+  | <span class="hljs-string">&quot;document:read:own&quot;</span>
+  | <span class="hljs-string">&quot;document:read:non-draft&quot;</span>
+<span class="hljs-comment">// ... keeps growing</span>
+</code></pre><p>And helper functions that duplicate logic:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">canUpdateDocument</span>(<span class="hljs-params">user, <span class="hljs-variable language_">document</span></span>) {
+  <span class="hljs-keyword">return</span> (
+    <span class="hljs-title function_">can</span>(user, <span class="hljs-string">&quot;document:update:all&quot;</span>) ||
+    (<span class="hljs-title function_">can</span>(user, <span class="hljs-string">&quot;document:update:unlocked&quot;</span>) &amp;&amp; !<span class="hljs-variable language_">document</span>.<span class="hljs-property">isLocked</span>) ||
+    (<span class="hljs-title function_">can</span>(user, <span class="hljs-string">&quot;document:update:own-unlocked-draft&quot;</span>) &amp;&amp;
+      <span class="hljs-variable language_">document</span>.<span class="hljs-property">creatorId</span> === user.<span class="hljs-property">id</span> &amp;&amp;
+      !<span class="hljs-variable language_">document</span>.<span class="hljs-property">isLocked</span> &amp;&amp;
+      <span class="hljs-variable language_">document</span>.<span class="hljs-property">status</span> === <span class="hljs-string">&quot;draft&quot;</span>)
+  )
+}
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>Services enforce all access</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>⚠️</td>
+<td>Permissions are centralized, but still require helper functions</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>✅</td>
+<td>Services automatically enforce permissions</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>✅</td>
+<td>Same <code>can()</code> function everywhere</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Server-enforced</td>
+</tr>
+</tbody></table>
+<h3>Stage 6: Basic ABAC</h3>
+<p><strong>Branch:</strong> <code>6-abac-basic</code></p>
+<p>ABAC evaluates permissions using attributes of users, resources, actions, and environment:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">function</span> <span class="hljs-title function_">getUserPermissions</span>(<span class="hljs-params"><span class="hljs-attr">user</span>: <span class="hljs-title class_">User</span></span>) {
+  <span class="hljs-keyword">const</span> builder = <span class="hljs-keyword">new</span> <span class="hljs-title class_">PermissionBuilder</span>()
+
+  <span class="hljs-keyword">if</span> (user.<span class="hljs-property">role</span> === <span class="hljs-string">&quot;author&quot;</span>) {
+    builder
+      .<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;read&quot;</span>, { <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;published&quot;</span> })
+      .<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;read&quot;</span>, { <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;archived&quot;</span> })
+      .<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;read&quot;</span>, { <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;draft&quot;</span>, <span class="hljs-attr">creatorId</span>: user.<span class="hljs-property">id</span> })
+      .<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;create&quot;</span>)
+      .<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, {
+        <span class="hljs-attr">creatorId</span>: user.<span class="hljs-property">id</span>,
+        <span class="hljs-attr">isLocked</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;draft&quot;</span>,
+      })
+  }
+
+  <span class="hljs-keyword">return</span> builder.<span class="hljs-title function_">build</span>()
+}
+
+<span class="hljs-comment">// Usage - one unified API</span>
+permissions.<span class="hljs-title function_">can</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, <span class="hljs-variable language_">document</span>)
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>Services enforce all access</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>⚠️</td>
+<td>All policies in permission builder, but DB queries duplicate permissions</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>✅</td>
+<td>Services automatically enforce permissions</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>✅</td>
+<td>Same builder everywhere</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Server-enforced</td>
+</tr>
+</tbody></table>
+<h3>Stage 7: Advanced ABAC</h3>
+<p><strong>Branch:</strong> <code>7-abac-advanced</code></p>
+<p>We added powerful features that RBAC simply cannot support:</p>
+<h4>Field-Level Permissions</h4>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-comment">// Different roles see different fields</span>
+builder.<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, { <span class="hljs-attr">isLocked</span>: <span class="hljs-literal">false</span> }, [
+  <span class="hljs-string">&quot;content&quot;</span>,
+  <span class="hljs-string">&quot;title&quot;</span>,
+  <span class="hljs-string">&quot;status&quot;</span>,
+])
+
+<span class="hljs-comment">// Check field access</span>
+permissions.<span class="hljs-title function_">can</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, <span class="hljs-variable language_">document</span>, <span class="hljs-string">&quot;status&quot;</span>)
+</code></pre><h4>Environment-Based Rules</h4>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">const</span> isWeekend = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>().<span class="hljs-title function_">getDay</span>() === <span class="hljs-number">0</span> || <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>().<span class="hljs-title function_">getDay</span>() === <span class="hljs-number">6</span>
+
+<span class="hljs-keyword">if</span> (!isWeekend) {
+  builder.<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, { <span class="hljs-attr">isLocked</span>: <span class="hljs-literal">false</span> })
+}
+</code></pre><h4>Automatic Database Filtering</h4>
+<p>Convert ABAC conditions directly to SQL WHERE clauses:</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-comment">// ABAC condition → SQL query</span>
+{ <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;published&quot;</span>, <span class="hljs-attr">department</span>: user.<span class="hljs-property">department</span> }
+<span class="hljs-comment">// becomes</span>
+<span class="hljs-variable constant_">WHERE</span> status = <span class="hljs-string">&#x27;published&#x27;</span> <span class="hljs-variable constant_">AND</span> department = <span class="hljs-string">&#x27;Engineering&#x27;</span>
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>Services enforce all access and DB-level filtering</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>✅</td>
+<td>All policies in permission builder</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>✅</td>
+<td>Services automatically enforce permissions</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>✅</td>
+<td>Same builder everywhere</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Server-enforced</td>
+</tr>
+</tbody></table>
+<h3>Stage 8: CASL</h3>
+<p><strong>Branch:</strong> <code>8-casl</code></p>
+<p>We migrated to CASL to avoid reinventing the wheel and to leverage a battle-tested library for complex permission logic.</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">import</span> { <span class="hljs-title class_">AbilityBuilder</span>, createMongoAbility } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@casl/ability&quot;</span>
+
+<span class="hljs-keyword">const</span> { <span class="hljs-attr">can</span>: allow, build } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">AbilityBuilder</span>(createMongoAbility)
+
+<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;read&quot;</span>, <span class="hljs-string">&quot;document&quot;</span>, [<span class="hljs-string">&quot;title&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>], { <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;published&quot;</span> })
+<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;update&quot;</span>, <span class="hljs-string">&quot;document&quot;</span>, { <span class="hljs-attr">creatorId</span>: user.<span class="hljs-property">id</span>, <span class="hljs-attr">isLocked</span>: <span class="hljs-literal">false</span> })
+
+<span class="hljs-keyword">const</span> ability = <span class="hljs-title function_">build</span>()
+
+<span class="hljs-comment">// Usage</span>
+ability.<span class="hljs-title function_">can</span>(<span class="hljs-string">&quot;update&quot;</span>, <span class="hljs-title function_">subject</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-variable language_">document</span>))
+</code></pre><h4>Goals Assessment</h4>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prevent unauthorized access</td>
+<td>✅</td>
+<td>Services enforce all access and DB-level filtering</td>
+</tr>
+<tr>
+<td>Single source of truth</td>
+<td>✅</td>
+<td>All policies in permission builder</td>
+</tr>
+<tr>
+<td>Automatic enforcement</td>
+<td>✅</td>
+<td>Services automatically enforce permissions</td>
+</tr>
+<tr>
+<td>Consistent front/back end</td>
+<td>✅</td>
+<td>Same builder everywhere</td>
+</tr>
+<tr>
+<td>Never trust the client</td>
+<td>✅</td>
+<td>Server-enforced</td>
+</tr>
+</tbody></table>
+<h2>The Permission Models Compared</h2>
+<h3>RBAC (Role-Based Access Control)</h3>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">const</span> permissions = {
+  <span class="hljs-attr">admin</span>: [<span class="hljs-string">&quot;create&quot;</span>, <span class="hljs-string">&quot;read&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, <span class="hljs-string">&quot;delete&quot;</span>],
+  <span class="hljs-attr">editor</span>: [<span class="hljs-string">&quot;read&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>],
+  <span class="hljs-attr">viewer</span>: [<span class="hljs-string">&quot;read&quot;</span>],
+}
+</code></pre><h4>Pros</h4>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Single source of truth</strong></td>
+<td>All permissions defined in one file</td>
+</tr>
+<tr>
+<td><strong>Readable code</strong></td>
+<td><code>can(user, &quot;document:create&quot;)</code> is self-documenting</td>
+</tr>
+<tr>
+<td><strong>Type safety</strong></td>
+<td>TypeScript ensures valid permission names</td>
+</tr>
+<tr>
+<td><strong>Easy updates</strong></td>
+<td>Change role permissions in one place</td>
+</tr>
+</tbody></table>
+<h4>Cons</h4>
+<table>
+<thead>
+<tr>
+<th>Limitation</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>No attribute awareness</strong></td>
+<td>Can&#39;t express &quot;edit own documents&quot;</td>
+</tr>
+<tr>
+<td><strong>No resource context</strong></td>
+<td>Can&#39;t check document status or ownership</td>
+</tr>
+<tr>
+<td><strong>Permission explosion</strong></td>
+<td>Complex rules require many specific permissions</td>
+</tr>
+</tbody></table>
+<h4>When to Use</h4>
+<ul>
+<li>Simple app with admin/user roles</li>
+<li>Manageable number of roles</li>
+<li>No/minimal attribute-based rules needed</li>
+</ul>
+<h4>When to Avoid</h4>
+<ul>
+<li>Permissions depend on resource data</li>
+<li>Rules vary by context or environment</li>
+<li>Field-level restrictions needed</li>
+</ul>
+<h3>ABAC (Attribute-Based Access Control)</h3>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button>builder.<span class="hljs-title function_">allow</span>(<span class="hljs-string">&quot;document&quot;</span>, <span class="hljs-string">&quot;update&quot;</span>, {
+  <span class="hljs-attr">creatorId</span>: user.<span class="hljs-property">id</span>,
+  <span class="hljs-attr">isLocked</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">status</span>: <span class="hljs-string">&quot;draft&quot;</span>,
+})
+</code></pre><h4>Pros</h4>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Unified API</strong></td>
+<td>One <code>can()</code> function for all checks</td>
+</tr>
+<tr>
+<td><strong>Declarative policies</strong></td>
+<td>Conditions describe what&#39;s allowed</td>
+</tr>
+<tr>
+<td><strong>No helper explosion</strong></td>
+<td>No <code>canUpdateDocument</code>, <code>canReadProject</code>, etc.</td>
+</tr>
+<tr>
+<td><strong>Composable</strong></td>
+<td>Easy to add new conditions</td>
+</tr>
+</tbody></table>
+<h4>Cons</h4>
+<table>
+<thead>
+<tr>
+<th>Limitation</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>More complex setup</strong></td>
+<td>Requires building a permission engine</td>
+</tr>
+<tr>
+<td><strong>TypeScript overhead</strong></td>
+<td>Condition types can get complex</td>
+</tr>
+</tbody></table>
+<h4>When to Use</h4>
+<ul>
+<li>Permissions depend on resource state</li>
+<li>Ownership, status, or context matters</li>
+<li>Need field-level restrictions</li>
+<li>Environment-aware rules (time, location)</li>
+</ul>
+<h4>When to Avoid</h4>
+<ul>
+<li>Only have simple role-based permissions</li>
+</ul>
+<h3>Using a Library</h3>
+<p>Libraries like CASL or Casbin can simplify permission management by providing a structured API, type safety, and query generation.</p>
+<pre><code class="hljs language-typescript"><button class="copy-btn">Copy</button><span class="hljs-keyword">import</span> { <span class="hljs-title class_">AbilityBuilder</span>, <span class="hljs-title class_">Ability</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@casl/ability&quot;</span>
+</code></pre><h4>What CASL Adds</h4>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Battle-tested</strong></td>
+<td>Production-ready, well-documented</td>
+</tr>
+<tr>
+<td><strong>Familiar API</strong></td>
+<td>Popular library that your team may already know</td>
+</tr>
+<tr>
+<td><strong>Advanced conditions</strong></td>
+<td>MongoDB-style operators (<code>$ne</code>, <code>$in</code>, etc.)</td>
+</tr>
+</tbody></table>
+<h4>CASL Tradeoffs</h4>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Class-based design</strong></td>
+<td>Requires <code>subject()</code> wrapper for plain objects</td>
+</tr>
+<tr>
+<td><strong>RSC compatibility</strong></td>
+<td><code>subject()</code> mutates objects (needs workarounds)</td>
+</tr>
+</tbody></table>
+<h4>When to Use</h4>
+<ul>
+<li>You need ABAC level permissions, but don&#39;t want to maintain an ABAC system</li>
+</ul>
+<h4>When to Avoid</h4>
+<ul>
+<li>You don&#39;t need ABAC level permissions</li>
+<li>You don&#39;t need the advanced features of CASL</li>
+<li>Working around the <code>subject()</code> wrapper is more hassle than writing your own ABAC implementation</li>
+</ul>
+<h3>Quick Decision Guide</h3>
+<p>I generally recommend using a basic ABAC system as a starting point for most applications. It provides flexibility without the complexity of an advanced ABAC system and most projects evolve past what RBAC can support rather quickly.</p>
+<p>From there add additional features as you need them which makes the system easier to maintain over time.</p>
+<h2>Key Takeaways</h2>
+<ol>
+<li><strong>Start simple</strong> - Begin with basic authorization, refactor when needed</li>
+<li><strong>Centralize authorization</strong> - Use a permissions module and services layer</li>
+<li><strong>Match complexity to requirements</strong> - Don&#39;t over-engineer; basic ABAC might be enough</li>
+<li><strong>Consider libraries</strong> - CASL, Casbin, or managed services to save time</li>
+</ol>
+</div><div class="lesson-links"><a href="/fem-permission-systems-that-scale/lessons/permission-libraries/upgrading-to-casl" class="prev">← Previous</a></div></div><div class="details-bg"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="154" height="154" viewBox="0 0 154 154"><defs><clipPath id="clip-path"><rect id="Rectangle_2238" data-name="Rectangle 2238" width="154" height="154" transform="translate(9467 350)" fill="#fff" stroke="#707070" stroke-width="1"></rect></clipPath><clipPath id="clip-corner-image-active"><rect width="154" height="154"></rect></clipPath></defs><g id="corner-image-active" clip-path="url(#clip-corner-image-active)"><g id="Corner-image-active-2" data-name="Corner-image-active" transform="translate(-9467 -350)" clip-path="url(#clip-path)"><path id="Subtraction_34" data-name="Subtraction 34" d="M-3857.365,1740.766h0l-7.07-7.07,12.89-12.89v14.142l-5.818,5.818Zm-14.142-14.142h0l-7.071-7.07,27.033-27.033v14.143l-19.96,19.96Zm-14.143-14.143h0l-7.07-7.069,41.175-41.175v14.142Zm-14.142-14.142h0l-7.07-7.069,55.317-55.317v14.142Zm-14.142-14.142h0l-7.07-7.069,69.459-69.459v14.142Zm-14.142-14.142h0l-7.07-7.069,76.739-76.739h6.862v7.28Zm-14.143-14.143h0l-7.07-7.069,62.6-62.6h14.142Zm-14.142-14.142h0l-7.07-7.069,48.454-48.454h14.142Zm-14.142-14.142h0l-7.07-7.069,34.312-34.312h14.142Zm-14.142-14.142h0l-7.07-7.069,20.17-20.17h14.142Zm-14.142-14.142h0l-7.071-7.071,6.027-6.027h14.144l-13.1,13.1Zm367.24-56.114v-.909l.455.455-.453.453Z" transform="translate(13472.546 -1236.766)" fill="var(--corner-fill)"></path></g></g></svg></div></div></div></div><footer class="footer"><ul class="socials"><li class="social"><a href="https://twitter.com/DevSimplified"><svg fill="none" height="100%" width="32" xmlns="http://www.w3.org/2000/svg" viewBox="0.254 0.25 500 451.95400000000006"><path d="M394.033.25h76.67L303.202 191.693l197.052 260.511h-154.29L225.118 294.205 86.844 452.204H10.127l179.16-204.77L.254.25H158.46l109.234 144.417zm-26.908 406.063h42.483L135.377 43.73h-45.59z" fill="var(--footer-icons)"></path></svg></a></li><li class="social"><a href="https://github.com/WebDevSimplified"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="clip-github-social"><rect width="32" height="32"></rect></clipPath></defs><g id="github-social" clip-path="url(#clip-github-social)"><g id="Group_272" data-name="Group 272" transform="translate(13522.5 -6994)"><path id="Subtraction_33" data-name="Subtraction 33" d="M-24967.5,8041a15.9,15.9,0,0,1-11.312-4.688A15.893,15.893,0,0,1-24983.5,8025a15.893,15.893,0,0,1,4.689-11.315A15.894,15.894,0,0,1-24967.5,8009a15.894,15.894,0,0,1,11.313,4.686A15.893,15.893,0,0,1-24951.5,8025a15.893,15.893,0,0,1-4.689,11.313A15.9,15.9,0,0,1-24967.5,8041Zm-3.781-4.571h0v3.918h7.895v-6.665a1.836,1.836,0,0,0-1.2-1.718c5.1-.617,7.467-2.975,7.467-7.424a7.176,7.176,0,0,0-1.637-4.728,6.74,6.74,0,0,0,.275-1.812,4.34,4.34,0,0,0-.52-2.452.574.574,0,0,0-.359-.1c-1.061,0-3.465,1.411-3.936,1.694a16.644,16.644,0,0,0-4.2-.489,16.379,16.379,0,0,0-3.969.445c-.846-.5-2.91-1.649-3.859-1.649a.566.566,0,0,0-.354.095,4.3,4.3,0,0,0-.521,2.452,6.7,6.7,0,0,0,.244,1.718,7.346,7.346,0,0,0-1.6,4.822,7.263,7.263,0,0,0,1.533,4.985c1.193,1.359,3.115,2.165,5.871,2.464a1.826,1.826,0,0,0-1.129,1.693v.5h0l-.006,0a7.121,7.121,0,0,1-2.033.363,2.608,2.608,0,0,1-.965-.158,4.438,4.438,0,0,1-1.836-1.881,2.361,2.361,0,0,0-1.248-1.091,3.472,3.472,0,0,0-1.217-.3.584.584,0,0,0-.545.224.282.282,0,0,0,.027.367,1.875,1.875,0,0,0,.447.307,4.732,4.732,0,0,1,.561.355,10.726,10.726,0,0,1,1.682,2.755c.043.092.078.163.105.217a3.876,3.876,0,0,0,2.42,1.185,6.036,6.036,0,0,0,.607.025c.875,0,1.988-.124,2-.125Z" transform="translate(11461 -1015)" fill="var(--footer-icons)"></path><g id="Ellipse_670" data-name="Ellipse 670" transform="translate(-13522.5 6994)" fill="none" stroke="var(--footer-icons)" stroke-width="1"><circle cx="16" cy="16" r="16" stroke="none"></circle><circle cx="16" cy="16" r="15.5" fill="none"></circle></g></g></g></svg></a></li><li class="social"><div class="terms"><p>Content Licensed Under CC-BY-NC-4.0</p><p>Code Samples and Exercises Licensed Under Apache 2.0</p><p>Site Designed by<!-- --> <a href="https://www.alexdanielson.com/">Alex Danielson</a></p></div></li></ul><div class="theme-icons"><button aria-label="Activate dark mode" title="Activate dark mode" class="theme-toggle"><svg xmlns="http://www.w3.org/2000/svg" width="36px" height="100%" viewBox="0 -960 960 960" fill="var(--text-footer)" role="img"><title>Dark Mode Icon</title><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Z"></path></svg></button></div></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"post":{"attributes":{"title":"Choosing the Right Permission Model"},"html":"\u003cp\u003eLet\u0026#39;s recap what we\u0026#39;ve learned, how our codebase evolved, and when to use each authorization approach.\u003c/p\u003e\n\u003ch2\u003eRemembering Our Goals\u003c/h2\u003e\n\u003cp\u003eAt the start of this workshop, we established what a well-designed permission system should achieve:\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003e\u003cstrong\u003ePrevent unauthorized access\u003c/strong\u003e\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eSingle source of truth\u003c/strong\u003e\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eAutomatic enforcement\u003c/strong\u003e\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eConsistent across frontend and backend\u003c/strong\u003e\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eNever trust the client\u003c/strong\u003e\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eFail closed\u003c/strong\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003eAll of our systems by default fail closed so we don\u0026#39;t have to worry about that, but we will analyze how each evolution of our codebase addressed (or failed to address) these goals.\u003c/p\u003e\n\u003ch2\u003eThe Evolution of Our Permission System\u003c/h2\u003e\n\u003ch3\u003eStage 1: Basic Permissions (Scattered Checks)\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e1-basic-permissions\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWe started with permission checks scattered throughout the codebase and no central policy system:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-comment\"\u003e// In a page component\u003c/span\u003e\n\u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e !== \u003cspan class=\"hljs-string\"\u003e\u0026quot;admin\u0026quot;\u003c/span\u003e \u0026amp;\u0026amp; user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e !== \u003cspan class=\"hljs-string\"\u003e\u0026quot;author\u0026quot;\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003eredirect\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;/\u0026quot;\u003c/span\u003e)\n}\n\n\u003cspan class=\"hljs-comment\"\u003e// In another file - slightly different logic\u003c/span\u003e\n\u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e === \u003cspan class=\"hljs-string\"\u003e\u0026quot;viewer\u0026quot;\u003c/span\u003e || user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e === \u003cspan class=\"hljs-string\"\u003e\u0026quot;editor\u0026quot;\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003ethrow\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eError\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;Unauthorized\u0026quot;\u003c/span\u003e)\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eMissing checks on several pages\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eLogic scattered everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eDevelopers must remember to add checks\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eDifferent logic in different places\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eSome pages relied only on UI hiding\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch3\u003eStage 2: Fixing Permission Bugs\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e2-fix-basic-permission-errors\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWe added missing permission checks to all vulnerable pages and fixed incorrect permission logic.\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-comment\"\u003e// Added proper server-side checks\u003c/span\u003e\n\u003cspan class=\"hljs-keyword\"\u003eexport\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003edefault\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003easync\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003efunction\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003eDocumentDetailPage\u003c/span\u003e(\u003cspan class=\"hljs-params\"\u003e{ params }\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e user = \u003cspan class=\"hljs-keyword\"\u003eawait\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003egetCurrentUser\u003c/span\u003e()\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e project = \u003cspan class=\"hljs-keyword\"\u003eawait\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003egetProjectById\u003c/span\u003e(params.\u003cspan class=\"hljs-property\"\u003eprojectId\u003c/span\u003e)\n\n  \u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (\n    user == \u003cspan class=\"hljs-literal\"\u003enull\u003c/span\u003e ||\n    (user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e !== \u003cspan class=\"hljs-string\"\u003e\u0026quot;admin\u0026quot;\u003c/span\u003e \u0026amp;\u0026amp;\n      project.\u003cspan class=\"hljs-property\"\u003edepartment\u003c/span\u003e != \u003cspan class=\"hljs-literal\"\u003enull\u003c/span\u003e \u0026amp;\u0026amp;\n      user.\u003cspan class=\"hljs-property\"\u003edepartment\u003c/span\u003e !== project.\u003cspan class=\"hljs-property\"\u003edepartment\u003c/span\u003e)\n  ) {\n    \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003eredirect\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;/\u0026quot;\u003c/span\u003e)\n  }\n  \u003cspan class=\"hljs-comment\"\u003e// ...\u003c/span\u003e\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eAll pages now have checks\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eStill duplicated everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eStill manual\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eCopy-paste prone to drift\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServer checks in place\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003cp\u003e\u003cstrong\u003eThe core problem:\u003c/strong\u003e We fixed the symptoms but not the root cause. Adding a new permission rule meant updating every file.\u003c/p\u003e\n\u003ch3\u003eStage 3: Services Layer\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e3-add-service-layer\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWe introduced a \u003cstrong\u003eservices layer\u003c/strong\u003e that centralizes business logic and authorization:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-comment\"\u003e// Services handle auth + business logic\u003c/span\u003e\n\u003cspan class=\"hljs-keyword\"\u003eexport\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003easync\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003efunction\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003ecreateDocumentService\u003c/span\u003e(\u003cspan class=\"hljs-params\"\u003e\n  \u003cspan class=\"hljs-attr\"\u003eprojectId\u003c/span\u003e: \u003cspan class=\"hljs-built_in\"\u003estring\u003c/span\u003e,\n  \u003cspan class=\"hljs-attr\"\u003edata\u003c/span\u003e: \u003cspan class=\"hljs-title class_\"\u003eDocumentFormValues\u003c/span\u003e,\n\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e user = \u003cspan class=\"hljs-keyword\"\u003eawait\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003egetCurrentUser\u003c/span\u003e()\n  \u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (user == \u003cspan class=\"hljs-literal\"\u003enull\u003c/span\u003e) \u003cspan class=\"hljs-keyword\"\u003ethrow\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eError\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;Unauthenticated\u0026quot;\u003c/span\u003e)\n\n  \u003cspan class=\"hljs-comment\"\u003e// Step 1: Authorization - can they perform this action?\u003c/span\u003e\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e permissions = \u003cspan class=\"hljs-keyword\"\u003eawait\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003egetUserPermissions\u003c/span\u003e()\n  \u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (!permissions.\u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;create\u0026quot;\u003c/span\u003e)) \u003cspan class=\"hljs-keyword\"\u003ethrow\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eAuthorizationError\u003c/span\u003e()\n\n  \u003cspan class=\"hljs-comment\"\u003e// Step 2: Validation - is the data valid?\u003c/span\u003e\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e result = documentSchema.\u003cspan class=\"hljs-title function_\"\u003esafeParse\u003c/span\u003e(data)\n  \u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (!result.\u003cspan class=\"hljs-property\"\u003esuccess\u003c/span\u003e) \u003cspan class=\"hljs-keyword\"\u003ethrow\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eError\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;Invalid data\u0026quot;\u003c/span\u003e)\n\n  \u003cspan class=\"hljs-comment\"\u003e// Step 3: Execute - perform the actual operation\u003c/span\u003e\n  \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003eawait\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003ecreateDocument\u003c/span\u003e({\n    ...result.\u003cspan class=\"hljs-property\"\u003edata\u003c/span\u003e,\n    \u003cspan class=\"hljs-attr\"\u003ecreatorId\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e,\n    \u003cspan class=\"hljs-attr\"\u003elastEditedById\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e,\n    projectId,\n  })\n}\n\n\u003cspan class=\"hljs-comment\"\u003e// Actions become thin wrappers\u003c/span\u003e\n\u003cspan class=\"hljs-keyword\"\u003eexport\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003easync\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003efunction\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003ecreateDocumentAction\u003c/span\u003e(\u003cspan class=\"hljs-params\"\u003e\n  \u003cspan class=\"hljs-attr\"\u003eprojectId\u003c/span\u003e: \u003cspan class=\"hljs-built_in\"\u003estring\u003c/span\u003e,\n  \u003cspan class=\"hljs-attr\"\u003edata\u003c/span\u003e: \u003cspan class=\"hljs-title class_\"\u003eDocumentFormValues\u003c/span\u003e,\n\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e [error, \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e] = \u003cspan class=\"hljs-keyword\"\u003eawait\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003etryFn\u003c/span\u003e(\u003cspan class=\"hljs-function\"\u003e() =\u0026gt;\u003c/span\u003e\n    \u003cspan class=\"hljs-title function_\"\u003ecreateDocumentService\u003c/span\u003e(projectId, data),\n  )\n  \u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (error) \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e error\n  \u003cspan class=\"hljs-title function_\"\u003eredirect\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e`/projects/\u003cspan class=\"hljs-subst\"\u003e${projectId}\u003c/span\u003e/documents/\u003cspan class=\"hljs-subst\"\u003e${\u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e.id}\u003c/span\u003e`\u003c/span\u003e)\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices enforce all access\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e⚠️\u003c/td\u003e\n\u003ctd\u003eBetter, but still lots of duplication\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices automatically enforce permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e❌\u003c/td\u003e\n\u003ctd\u003eChecks on the client are still copy-paste error prone\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices run server-side\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003cp\u003e\u003cstrong\u003eKey insight:\u003c/strong\u003e The services layer gave us \u003cstrong\u003esecurity by default\u003c/strong\u003e as long as all data access goes through services.\u003c/p\u003e\n\u003ch3\u003eStage 4: Basic RBAC\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e4-basic-rbac\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWe created a centralized permission system where roles map to permissions:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003etype\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003ePermission\u003c/span\u003e =\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:create\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:delete\u0026quot;\u003c/span\u003e\n\n\u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e \u003cspan class=\"hljs-attr\"\u003epermissionsByRole\u003c/span\u003e: \u003cspan class=\"hljs-title class_\"\u003eRecord\u003c/span\u003e\u0026lt;\u003cspan class=\"hljs-title class_\"\u003eUserRole\u003c/span\u003e, \u003cspan class=\"hljs-title class_\"\u003ePermission\u003c/span\u003e[]\u0026gt; = {\n  \u003cspan class=\"hljs-attr\"\u003eadmin\u003c/span\u003e: [\n    \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:create\u0026quot;\u003c/span\u003e,\n    \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read\u0026quot;\u003c/span\u003e,\n    \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update\u0026quot;\u003c/span\u003e,\n    \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:delete\u0026quot;\u003c/span\u003e,\n  ],\n  \u003cspan class=\"hljs-attr\"\u003eeditor\u003c/span\u003e: [\u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update\u0026quot;\u003c/span\u003e],\n  \u003cspan class=\"hljs-attr\"\u003eauthor\u003c/span\u003e: [\u003cspan class=\"hljs-string\"\u003e\u0026quot;document:create\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read\u0026quot;\u003c/span\u003e],\n  \u003cspan class=\"hljs-attr\"\u003eviewer\u003c/span\u003e: [\u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read\u0026quot;\u003c/span\u003e],\n}\n\n\u003cspan class=\"hljs-keyword\"\u003efunction\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(\u003cspan class=\"hljs-params\"\u003e\u003cspan class=\"hljs-attr\"\u003euser\u003c/span\u003e: { role: UserRole }, \u003cspan class=\"hljs-attr\"\u003epermission\u003c/span\u003e: \u003cspan class=\"hljs-title class_\"\u003ePermission\u003c/span\u003e\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e permissionsByRole[user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e].\u003cspan class=\"hljs-title function_\"\u003eincludes\u003c/span\u003e(permission)\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices enforce all access\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e⚠️\u003c/td\u003e\n\u003ctd\u003ePermissions are centralized, but still require helper functions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices automatically enforce permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eSame \u003ccode\u003ecan()\u003c/code\u003e function everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServer-enforced\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch3\u003eStage 5: RBAC Limitations Exposed\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e5-rbac-limits\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWhen we added more realistic requirements, RBAC struggled:\u003c/p\u003e\n\u003cblockquote\u003e\n\u003cp\u003e\u0026quot;Authors can edit documents \u003cstrong\u003ethey created\u003c/strong\u003e, that are \u003cstrong\u003enot locked\u003c/strong\u003e, in \u003cstrong\u003edraft status\u003c/strong\u003e\u0026quot;\u003c/p\u003e\n\u003c/blockquote\u003e\n\u003cp\u003eThis forced us to create exploding permission names:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003etype\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003ePermission\u003c/span\u003e =\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update:all\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update:unlocked\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update:own-unlocked-draft\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read:all\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read:own\u0026quot;\u003c/span\u003e\n  | \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:read:non-draft\u0026quot;\u003c/span\u003e\n\u003cspan class=\"hljs-comment\"\u003e// ... keeps growing\u003c/span\u003e\n\u003c/code\u003e\u003c/pre\u003e\u003cp\u003eAnd helper functions that duplicate logic:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003eexport\u003c/span\u003e \u003cspan class=\"hljs-keyword\"\u003efunction\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003ecanUpdateDocument\u003c/span\u003e(\u003cspan class=\"hljs-params\"\u003euser, \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e (\n    \u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(user, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update:all\u0026quot;\u003c/span\u003e) ||\n    (\u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(user, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update:unlocked\u0026quot;\u003c/span\u003e) \u0026amp;\u0026amp; !\u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e.\u003cspan class=\"hljs-property\"\u003eisLocked\u003c/span\u003e) ||\n    (\u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(user, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document:update:own-unlocked-draft\u0026quot;\u003c/span\u003e) \u0026amp;\u0026amp;\n      \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e.\u003cspan class=\"hljs-property\"\u003ecreatorId\u003c/span\u003e === user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e \u0026amp;\u0026amp;\n      !\u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e.\u003cspan class=\"hljs-property\"\u003eisLocked\u003c/span\u003e \u0026amp;\u0026amp;\n      \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e.\u003cspan class=\"hljs-property\"\u003estatus\u003c/span\u003e === \u003cspan class=\"hljs-string\"\u003e\u0026quot;draft\u0026quot;\u003c/span\u003e)\n  )\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices enforce all access\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e⚠️\u003c/td\u003e\n\u003ctd\u003ePermissions are centralized, but still require helper functions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices automatically enforce permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eSame \u003ccode\u003ecan()\u003c/code\u003e function everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServer-enforced\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch3\u003eStage 6: Basic ABAC\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e6-abac-basic\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eABAC evaluates permissions using attributes of users, resources, actions, and environment:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003efunction\u003c/span\u003e \u003cspan class=\"hljs-title function_\"\u003egetUserPermissions\u003c/span\u003e(\u003cspan class=\"hljs-params\"\u003e\u003cspan class=\"hljs-attr\"\u003euser\u003c/span\u003e: \u003cspan class=\"hljs-title class_\"\u003eUser\u003c/span\u003e\u003c/span\u003e) {\n  \u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e builder = \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003ePermissionBuilder\u003c/span\u003e()\n\n  \u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (user.\u003cspan class=\"hljs-property\"\u003erole\u003c/span\u003e === \u003cspan class=\"hljs-string\"\u003e\u0026quot;author\u0026quot;\u003c/span\u003e) {\n    builder\n      .\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e, { \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;published\u0026quot;\u003c/span\u003e })\n      .\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e, { \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;archived\u0026quot;\u003c/span\u003e })\n      .\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e, { \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;draft\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-attr\"\u003ecreatorId\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e })\n      .\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;create\u0026quot;\u003c/span\u003e)\n      .\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, {\n        \u003cspan class=\"hljs-attr\"\u003ecreatorId\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e,\n        \u003cspan class=\"hljs-attr\"\u003eisLocked\u003c/span\u003e: \u003cspan class=\"hljs-literal\"\u003efalse\u003c/span\u003e,\n        \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;draft\u0026quot;\u003c/span\u003e,\n      })\n  }\n\n  \u003cspan class=\"hljs-keyword\"\u003ereturn\u003c/span\u003e builder.\u003cspan class=\"hljs-title function_\"\u003ebuild\u003c/span\u003e()\n}\n\n\u003cspan class=\"hljs-comment\"\u003e// Usage - one unified API\u003c/span\u003e\npermissions.\u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e)\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices enforce all access\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e⚠️\u003c/td\u003e\n\u003ctd\u003eAll policies in permission builder, but DB queries duplicate permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices automatically enforce permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eSame builder everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServer-enforced\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch3\u003eStage 7: Advanced ABAC\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e7-abac-advanced\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWe added powerful features that RBAC simply cannot support:\u003c/p\u003e\n\u003ch4\u003eField-Level Permissions\u003c/h4\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-comment\"\u003e// Different roles see different fields\u003c/span\u003e\nbuilder.\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, { \u003cspan class=\"hljs-attr\"\u003eisLocked\u003c/span\u003e: \u003cspan class=\"hljs-literal\"\u003efalse\u003c/span\u003e }, [\n  \u003cspan class=\"hljs-string\"\u003e\u0026quot;content\u0026quot;\u003c/span\u003e,\n  \u003cspan class=\"hljs-string\"\u003e\u0026quot;title\u0026quot;\u003c/span\u003e,\n  \u003cspan class=\"hljs-string\"\u003e\u0026quot;status\u0026quot;\u003c/span\u003e,\n])\n\n\u003cspan class=\"hljs-comment\"\u003e// Check field access\u003c/span\u003e\npermissions.\u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;status\u0026quot;\u003c/span\u003e)\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eEnvironment-Based Rules\u003c/h4\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e isWeekend = \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eDate\u003c/span\u003e().\u003cspan class=\"hljs-title function_\"\u003egetDay\u003c/span\u003e() === \u003cspan class=\"hljs-number\"\u003e0\u003c/span\u003e || \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eDate\u003c/span\u003e().\u003cspan class=\"hljs-title function_\"\u003egetDay\u003c/span\u003e() === \u003cspan class=\"hljs-number\"\u003e6\u003c/span\u003e\n\n\u003cspan class=\"hljs-keyword\"\u003eif\u003c/span\u003e (!isWeekend) {\n  builder.\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, { \u003cspan class=\"hljs-attr\"\u003eisLocked\u003c/span\u003e: \u003cspan class=\"hljs-literal\"\u003efalse\u003c/span\u003e })\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eAutomatic Database Filtering\u003c/h4\u003e\n\u003cp\u003eConvert ABAC conditions directly to SQL WHERE clauses:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-comment\"\u003e// ABAC condition → SQL query\u003c/span\u003e\n{ \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;published\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-attr\"\u003edepartment\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003edepartment\u003c/span\u003e }\n\u003cspan class=\"hljs-comment\"\u003e// becomes\u003c/span\u003e\n\u003cspan class=\"hljs-variable constant_\"\u003eWHERE\u003c/span\u003e status = \u003cspan class=\"hljs-string\"\u003e\u0026#x27;published\u0026#x27;\u003c/span\u003e \u003cspan class=\"hljs-variable constant_\"\u003eAND\u003c/span\u003e department = \u003cspan class=\"hljs-string\"\u003e\u0026#x27;Engineering\u0026#x27;\u003c/span\u003e\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices enforce all access and DB-level filtering\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eAll policies in permission builder\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices automatically enforce permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eSame builder everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServer-enforced\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch3\u003eStage 8: CASL\u003c/h3\u003e\n\u003cp\u003e\u003cstrong\u003eBranch:\u003c/strong\u003e \u003ccode\u003e8-casl\u003c/code\u003e\u003c/p\u003e\n\u003cp\u003eWe migrated to CASL to avoid reinventing the wheel and to leverage a battle-tested library for complex permission logic.\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003eimport\u003c/span\u003e { \u003cspan class=\"hljs-title class_\"\u003eAbilityBuilder\u003c/span\u003e, createMongoAbility } \u003cspan class=\"hljs-keyword\"\u003efrom\u003c/span\u003e \u003cspan class=\"hljs-string\"\u003e\u0026quot;@casl/ability\u0026quot;\u003c/span\u003e\n\n\u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e { \u003cspan class=\"hljs-attr\"\u003ecan\u003c/span\u003e: allow, build } = \u003cspan class=\"hljs-keyword\"\u003enew\u003c/span\u003e \u003cspan class=\"hljs-title class_\"\u003eAbilityBuilder\u003c/span\u003e(createMongoAbility)\n\n\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, [\u003cspan class=\"hljs-string\"\u003e\u0026quot;title\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;content\u0026quot;\u003c/span\u003e], { \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;published\u0026quot;\u003c/span\u003e })\n\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, { \u003cspan class=\"hljs-attr\"\u003ecreatorId\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e, \u003cspan class=\"hljs-attr\"\u003eisLocked\u003c/span\u003e: \u003cspan class=\"hljs-literal\"\u003efalse\u003c/span\u003e })\n\n\u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e ability = \u003cspan class=\"hljs-title function_\"\u003ebuild\u003c/span\u003e()\n\n\u003cspan class=\"hljs-comment\"\u003e// Usage\u003c/span\u003e\nability.\u003cspan class=\"hljs-title function_\"\u003ecan\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-title function_\"\u003esubject\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-variable language_\"\u003edocument\u003c/span\u003e))\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eGoals Assessment\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eGoal\u003c/th\u003e\n\u003cth\u003eStatus\u003c/th\u003e\n\u003cth\u003eNotes\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003ePrevent unauthorized access\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices enforce all access and DB-level filtering\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eSingle source of truth\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eAll policies in permission builder\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eAutomatic enforcement\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServices automatically enforce permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eConsistent front/back end\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eSame builder everywhere\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003eNever trust the client\u003c/td\u003e\n\u003ctd\u003e✅\u003c/td\u003e\n\u003ctd\u003eServer-enforced\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch2\u003eThe Permission Models Compared\u003c/h2\u003e\n\u003ch3\u003eRBAC (Role-Based Access Control)\u003c/h3\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003econst\u003c/span\u003e permissions = {\n  \u003cspan class=\"hljs-attr\"\u003eadmin\u003c/span\u003e: [\u003cspan class=\"hljs-string\"\u003e\u0026quot;create\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;delete\u0026quot;\u003c/span\u003e],\n  \u003cspan class=\"hljs-attr\"\u003eeditor\u003c/span\u003e: [\u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e],\n  \u003cspan class=\"hljs-attr\"\u003eviewer\u003c/span\u003e: [\u003cspan class=\"hljs-string\"\u003e\u0026quot;read\u0026quot;\u003c/span\u003e],\n}\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003ePros\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eBenefit\u003c/th\u003e\n\u003cth\u003eDescription\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eSingle source of truth\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eAll permissions defined in one file\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eReadable code\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003ecan(user, \u0026quot;document:create\u0026quot;)\u003c/code\u003e is self-documenting\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eType safety\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eTypeScript ensures valid permission names\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eEasy updates\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eChange role permissions in one place\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch4\u003eCons\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eLimitation\u003c/th\u003e\n\u003cth\u003eDescription\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eNo attribute awareness\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eCan\u0026#39;t express \u0026quot;edit own documents\u0026quot;\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eNo resource context\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eCan\u0026#39;t check document status or ownership\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003ePermission explosion\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eComplex rules require many specific permissions\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch4\u003eWhen to Use\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003eSimple app with admin/user roles\u003c/li\u003e\n\u003cli\u003eManageable number of roles\u003c/li\u003e\n\u003cli\u003eNo/minimal attribute-based rules needed\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4\u003eWhen to Avoid\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003ePermissions depend on resource data\u003c/li\u003e\n\u003cli\u003eRules vary by context or environment\u003c/li\u003e\n\u003cli\u003eField-level restrictions needed\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch3\u003eABAC (Attribute-Based Access Control)\u003c/h3\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003ebuilder.\u003cspan class=\"hljs-title function_\"\u003eallow\u003c/span\u003e(\u003cspan class=\"hljs-string\"\u003e\u0026quot;document\u0026quot;\u003c/span\u003e, \u003cspan class=\"hljs-string\"\u003e\u0026quot;update\u0026quot;\u003c/span\u003e, {\n  \u003cspan class=\"hljs-attr\"\u003ecreatorId\u003c/span\u003e: user.\u003cspan class=\"hljs-property\"\u003eid\u003c/span\u003e,\n  \u003cspan class=\"hljs-attr\"\u003eisLocked\u003c/span\u003e: \u003cspan class=\"hljs-literal\"\u003efalse\u003c/span\u003e,\n  \u003cspan class=\"hljs-attr\"\u003estatus\u003c/span\u003e: \u003cspan class=\"hljs-string\"\u003e\u0026quot;draft\u0026quot;\u003c/span\u003e,\n})\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003ePros\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eBenefit\u003c/th\u003e\n\u003cth\u003eDescription\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eUnified API\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eOne \u003ccode\u003ecan()\u003c/code\u003e function for all checks\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eDeclarative policies\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eConditions describe what\u0026#39;s allowed\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eNo helper explosion\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eNo \u003ccode\u003ecanUpdateDocument\u003c/code\u003e, \u003ccode\u003ecanReadProject\u003c/code\u003e, etc.\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eComposable\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eEasy to add new conditions\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch4\u003eCons\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eLimitation\u003c/th\u003e\n\u003cth\u003eDescription\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eMore complex setup\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eRequires building a permission engine\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eTypeScript overhead\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eCondition types can get complex\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch4\u003eWhen to Use\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003ePermissions depend on resource state\u003c/li\u003e\n\u003cli\u003eOwnership, status, or context matters\u003c/li\u003e\n\u003cli\u003eNeed field-level restrictions\u003c/li\u003e\n\u003cli\u003eEnvironment-aware rules (time, location)\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4\u003eWhen to Avoid\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003eOnly have simple role-based permissions\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch3\u003eUsing a Library\u003c/h3\u003e\n\u003cp\u003eLibraries like CASL or Casbin can simplify permission management by providing a structured API, type safety, and query generation.\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"hljs language-typescript\"\u003e\u003cbutton class=\"copy-btn\"\u003eCopy\u003c/button\u003e\u003cspan class=\"hljs-keyword\"\u003eimport\u003c/span\u003e { \u003cspan class=\"hljs-title class_\"\u003eAbilityBuilder\u003c/span\u003e, \u003cspan class=\"hljs-title class_\"\u003eAbility\u003c/span\u003e } \u003cspan class=\"hljs-keyword\"\u003efrom\u003c/span\u003e \u003cspan class=\"hljs-string\"\u003e\u0026quot;@casl/ability\u0026quot;\u003c/span\u003e\n\u003c/code\u003e\u003c/pre\u003e\u003ch4\u003eWhat CASL Adds\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eFeature\u003c/th\u003e\n\u003cth\u003eDescription\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eBattle-tested\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eProduction-ready, well-documented\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eFamiliar API\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003ePopular library that your team may already know\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eAdvanced conditions\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eMongoDB-style operators (\u003ccode\u003e$ne\u003c/code\u003e, \u003ccode\u003e$in\u003c/code\u003e, etc.)\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch4\u003eCASL Tradeoffs\u003c/h4\u003e\n\u003ctable\u003e\n\u003cthead\u003e\n\u003ctr\u003e\n\u003cth\u003eIssue\u003c/th\u003e\n\u003cth\u003eDescription\u003c/th\u003e\n\u003c/tr\u003e\n\u003c/thead\u003e\n\u003ctbody\u003e\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eClass-based design\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003eRequires \u003ccode\u003esubject()\u003c/code\u003e wrapper for plain objects\u003c/td\u003e\n\u003c/tr\u003e\n\u003ctr\u003e\n\u003ctd\u003e\u003cstrong\u003eRSC compatibility\u003c/strong\u003e\u003c/td\u003e\n\u003ctd\u003e\u003ccode\u003esubject()\u003c/code\u003e mutates objects (needs workarounds)\u003c/td\u003e\n\u003c/tr\u003e\n\u003c/tbody\u003e\u003c/table\u003e\n\u003ch4\u003eWhen to Use\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003eYou need ABAC level permissions, but don\u0026#39;t want to maintain an ABAC system\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch4\u003eWhen to Avoid\u003c/h4\u003e\n\u003cul\u003e\n\u003cli\u003eYou don\u0026#39;t need ABAC level permissions\u003c/li\u003e\n\u003cli\u003eYou don\u0026#39;t need the advanced features of CASL\u003c/li\u003e\n\u003cli\u003eWorking around the \u003ccode\u003esubject()\u003c/code\u003e wrapper is more hassle than writing your own ABAC implementation\u003c/li\u003e\n\u003c/ul\u003e\n\u003ch3\u003eQuick Decision Guide\u003c/h3\u003e\n\u003cp\u003eI generally recommend using a basic ABAC system as a starting point for most applications. It provides flexibility without the complexity of an advanced ABAC system and most projects evolve past what RBAC can support rather quickly.\u003c/p\u003e\n\u003cp\u003eFrom there add additional features as you need them which makes the system easier to maintain over time.\u003c/p\u003e\n\u003ch2\u003eKey Takeaways\u003c/h2\u003e\n\u003col\u003e\n\u003cli\u003e\u003cstrong\u003eStart simple\u003c/strong\u003e - Begin with basic authorization, refactor when needed\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eCentralize authorization\u003c/strong\u003e - Use a permissions module and services layer\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eMatch complexity to requirements\u003c/strong\u003e - Don\u0026#39;t over-engineer; basic ABAC might be enough\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eConsider libraries\u003c/strong\u003e - CASL, Casbin, or managed services to save time\u003c/li\u003e\n\u003c/ol\u003e\n","markdown":"\nLet's recap what we've learned, how our codebase evolved, and when to use each authorization approach.\n\n## Remembering Our Goals\n\nAt the start of this workshop, we established what a well-designed permission system should achieve:\n\n- **Prevent unauthorized access**\n- **Single source of truth**\n- **Automatic enforcement**\n- **Consistent across frontend and backend**\n- **Never trust the client**\n- **Fail closed**\n\nAll of our systems by default fail closed so we don't have to worry about that, but we will analyze how each evolution of our codebase addressed (or failed to address) these goals.\n\n## The Evolution of Our Permission System\n\n### Stage 1: Basic Permissions (Scattered Checks)\n\n**Branch:** `1-basic-permissions`\n\nWe started with permission checks scattered throughout the codebase and no central policy system:\n\n```typescript\n// In a page component\nif (user.role !== \"admin\" \u0026\u0026 user.role !== \"author\") {\n  return redirect(\"/\")\n}\n\n// In another file - slightly different logic\nif (user.role === \"viewer\" || user.role === \"editor\") {\n  throw new Error(\"Unauthorized\")\n}\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                  |\n| --------------------------- | ------ | -------------------------------------- |\n| Prevent unauthorized access | ❌     | Missing checks on several pages        |\n| Single source of truth      | ❌     | Logic scattered everywhere             |\n| Automatic enforcement       | ❌     | Developers must remember to add checks |\n| Consistent front/back end   | ❌     | Different logic in different places    |\n| Never trust the client      | ❌     | Some pages relied only on UI hiding    |\n\n### Stage 2: Fixing Permission Bugs\n\n**Branch:** `2-fix-basic-permission-errors`\n\nWe added missing permission checks to all vulnerable pages and fixed incorrect permission logic.\n\n```typescript\n// Added proper server-side checks\nexport default async function DocumentDetailPage({ params }) {\n  const user = await getCurrentUser()\n  const project = await getProjectById(params.projectId)\n\n  if (\n    user == null ||\n    (user.role !== \"admin\" \u0026\u0026\n      project.department != null \u0026\u0026\n      user.department !== project.department)\n  ) {\n    return redirect(\"/\")\n  }\n  // ...\n}\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                       |\n| --------------------------- | ------ | --------------------------- |\n| Prevent unauthorized access | ✅     | All pages now have checks   |\n| Single source of truth      | ❌     | Still duplicated everywhere |\n| Automatic enforcement       | ❌     | Still manual                |\n| Consistent front/back end   | ❌     | Copy-paste prone to drift   |\n| Never trust the client      | ✅     | Server checks in place      |\n\n**The core problem:** We fixed the symptoms but not the root cause. Adding a new permission rule meant updating every file.\n\n### Stage 3: Services Layer\n\n**Branch:** `3-add-service-layer`\n\nWe introduced a **services layer** that centralizes business logic and authorization:\n\n```typescript\n// Services handle auth + business logic\nexport async function createDocumentService(\n  projectId: string,\n  data: DocumentFormValues,\n) {\n  const user = await getCurrentUser()\n  if (user == null) throw new Error(\"Unauthenticated\")\n\n  // Step 1: Authorization - can they perform this action?\n  const permissions = await getUserPermissions()\n  if (!permissions.can(\"document\", \"create\")) throw new AuthorizationError()\n\n  // Step 2: Validation - is the data valid?\n  const result = documentSchema.safeParse(data)\n  if (!result.success) throw new Error(\"Invalid data\")\n\n  // Step 3: Execute - perform the actual operation\n  return await createDocument({\n    ...result.data,\n    creatorId: user.id,\n    lastEditedById: user.id,\n    projectId,\n  })\n}\n\n// Actions become thin wrappers\nexport async function createDocumentAction(\n  projectId: string,\n  data: DocumentFormValues,\n) {\n  const [error, document] = await tryFn(() =\u003e\n    createDocumentService(projectId, data),\n  )\n  if (error) return error\n  redirect(`/projects/${projectId}/documents/${document.id}`)\n}\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                                 |\n| --------------------------- | ------ | ----------------------------------------------------- |\n| Prevent unauthorized access | ✅     | Services enforce all access                           |\n| Single source of truth      | ⚠️     | Better, but still lots of duplication                 |\n| Automatic enforcement       | ✅     | Services automatically enforce permissions            |\n| Consistent front/back end   | ❌     | Checks on the client are still copy-paste error prone |\n| Never trust the client      | ✅     | Services run server-side                              |\n\n**Key insight:** The services layer gave us **security by default** as long as all data access goes through services.\n\n### Stage 4: Basic RBAC\n\n**Branch:** `4-basic-rbac`\n\nWe created a centralized permission system where roles map to permissions:\n\n```typescript\ntype Permission =\n  | \"document:create\"\n  | \"document:read\"\n  | \"document:update\"\n  | \"document:delete\"\n\nconst permissionsByRole: Record\u003cUserRole, Permission[]\u003e = {\n  admin: [\n    \"document:create\",\n    \"document:read\",\n    \"document:update\",\n    \"document:delete\",\n  ],\n  editor: [\"document:read\", \"document:update\"],\n  author: [\"document:create\", \"document:read\"],\n  viewer: [\"document:read\"],\n}\n\nfunction can(user: { role: UserRole }, permission: Permission) {\n  return permissionsByRole[user.role].includes(permission)\n}\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                                           |\n| --------------------------- | ------ | --------------------------------------------------------------- |\n| Prevent unauthorized access | ✅     | Services enforce all access                                     |\n| Single source of truth      | ⚠️     | Permissions are centralized, but still require helper functions |\n| Automatic enforcement       | ✅     | Services automatically enforce permissions                      |\n| Consistent front/back end   | ✅     | Same `can()` function everywhere                                |\n| Never trust the client      | ✅     | Server-enforced                                                 |\n\n### Stage 5: RBAC Limitations Exposed\n\n**Branch:** `5-rbac-limits`\n\nWhen we added more realistic requirements, RBAC struggled:\n\n\u003e \"Authors can edit documents **they created**, that are **not locked**, in **draft status**\"\n\nThis forced us to create exploding permission names:\n\n```typescript\ntype Permission =\n  | \"document:update:all\"\n  | \"document:update:unlocked\"\n  | \"document:update:own-unlocked-draft\"\n  | \"document:read:all\"\n  | \"document:read:own\"\n  | \"document:read:non-draft\"\n// ... keeps growing\n```\n\nAnd helper functions that duplicate logic:\n\n```typescript\nexport function canUpdateDocument(user, document) {\n  return (\n    can(user, \"document:update:all\") ||\n    (can(user, \"document:update:unlocked\") \u0026\u0026 !document.isLocked) ||\n    (can(user, \"document:update:own-unlocked-draft\") \u0026\u0026\n      document.creatorId === user.id \u0026\u0026\n      !document.isLocked \u0026\u0026\n      document.status === \"draft\")\n  )\n}\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                                           |\n| --------------------------- | ------ | --------------------------------------------------------------- |\n| Prevent unauthorized access | ✅     | Services enforce all access                                     |\n| Single source of truth      | ⚠️     | Permissions are centralized, but still require helper functions |\n| Automatic enforcement       | ✅     | Services automatically enforce permissions                      |\n| Consistent front/back end   | ✅     | Same `can()` function everywhere                                |\n| Never trust the client      | ✅     | Server-enforced                                                 |\n\n### Stage 6: Basic ABAC\n\n**Branch:** `6-abac-basic`\n\nABAC evaluates permissions using attributes of users, resources, actions, and environment:\n\n```typescript\nfunction getUserPermissions(user: User) {\n  const builder = new PermissionBuilder()\n\n  if (user.role === \"author\") {\n    builder\n      .allow(\"document\", \"read\", { status: \"published\" })\n      .allow(\"document\", \"read\", { status: \"archived\" })\n      .allow(\"document\", \"read\", { status: \"draft\", creatorId: user.id })\n      .allow(\"document\", \"create\")\n      .allow(\"document\", \"update\", {\n        creatorId: user.id,\n        isLocked: false,\n        status: \"draft\",\n      })\n  }\n\n  return builder.build()\n}\n\n// Usage - one unified API\npermissions.can(\"document\", \"update\", document)\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                                                    |\n| --------------------------- | ------ | ------------------------------------------------------------------------ |\n| Prevent unauthorized access | ✅     | Services enforce all access                                              |\n| Single source of truth      | ⚠️     | All policies in permission builder, but DB queries duplicate permissions |\n| Automatic enforcement       | ✅     | Services automatically enforce permissions                               |\n| Consistent front/back end   | ✅     | Same builder everywhere                                                  |\n| Never trust the client      | ✅     | Server-enforced                                                          |\n\n### Stage 7: Advanced ABAC\n\n**Branch:** `7-abac-advanced`\n\nWe added powerful features that RBAC simply cannot support:\n\n#### Field-Level Permissions\n\n```typescript\n// Different roles see different fields\nbuilder.allow(\"document\", \"update\", { isLocked: false }, [\n  \"content\",\n  \"title\",\n  \"status\",\n])\n\n// Check field access\npermissions.can(\"document\", \"update\", document, \"status\")\n```\n\n#### Environment-Based Rules\n\n```typescript\nconst isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6\n\nif (!isWeekend) {\n  builder.allow(\"document\", \"update\", { isLocked: false })\n}\n```\n\n#### Automatic Database Filtering\n\nConvert ABAC conditions directly to SQL WHERE clauses:\n\n```typescript\n// ABAC condition → SQL query\n{ status: \"published\", department: user.department }\n// becomes\nWHERE status = 'published' AND department = 'Engineering'\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                              |\n| --------------------------- | ------ | -------------------------------------------------- |\n| Prevent unauthorized access | ✅     | Services enforce all access and DB-level filtering |\n| Single source of truth      | ✅     | All policies in permission builder                 |\n| Automatic enforcement       | ✅     | Services automatically enforce permissions         |\n| Consistent front/back end   | ✅     | Same builder everywhere                            |\n| Never trust the client      | ✅     | Server-enforced                                    |\n\n### Stage 8: CASL\n\n**Branch:** `8-casl`\n\nWe migrated to CASL to avoid reinventing the wheel and to leverage a battle-tested library for complex permission logic.\n\n```typescript\nimport { AbilityBuilder, createMongoAbility } from \"@casl/ability\"\n\nconst { can: allow, build } = new AbilityBuilder(createMongoAbility)\n\nallow(\"read\", \"document\", [\"title\", \"content\"], { status: \"published\" })\nallow(\"update\", \"document\", { creatorId: user.id, isLocked: false })\n\nconst ability = build()\n\n// Usage\nability.can(\"update\", subject(\"document\", document))\n```\n\n#### Goals Assessment\n\n| Goal                        | Status | Notes                                              |\n| --------------------------- | ------ | -------------------------------------------------- |\n| Prevent unauthorized access | ✅     | Services enforce all access and DB-level filtering |\n| Single source of truth      | ✅     | All policies in permission builder                 |\n| Automatic enforcement       | ✅     | Services automatically enforce permissions         |\n| Consistent front/back end   | ✅     | Same builder everywhere                            |\n| Never trust the client      | ✅     | Server-enforced                                    |\n\n## The Permission Models Compared\n\n### RBAC (Role-Based Access Control)\n\n```typescript\nconst permissions = {\n  admin: [\"create\", \"read\", \"update\", \"delete\"],\n  editor: [\"read\", \"update\"],\n  viewer: [\"read\"],\n}\n```\n\n#### Pros\n\n| Benefit                    | Description                                        |\n| -------------------------- | -------------------------------------------------- |\n| **Single source of truth** | All permissions defined in one file                |\n| **Readable code**          | `can(user, \"document:create\")` is self-documenting |\n| **Type safety**            | TypeScript ensures valid permission names          |\n| **Easy updates**           | Change role permissions in one place               |\n\n#### Cons\n\n| Limitation                 | Description                                     |\n| -------------------------- | ----------------------------------------------- |\n| **No attribute awareness** | Can't express \"edit own documents\"              |\n| **No resource context**    | Can't check document status or ownership        |\n| **Permission explosion**   | Complex rules require many specific permissions |\n\n#### When to Use\n\n- Simple app with admin/user roles\n- Manageable number of roles\n- No/minimal attribute-based rules needed\n\n#### When to Avoid\n\n- Permissions depend on resource data\n- Rules vary by context or environment\n- Field-level restrictions needed\n\n### ABAC (Attribute-Based Access Control)\n\n```typescript\nbuilder.allow(\"document\", \"update\", {\n  creatorId: user.id,\n  isLocked: false,\n  status: \"draft\",\n})\n```\n\n#### Pros\n\n| Benefit                  | Description                                    |\n| ------------------------ | ---------------------------------------------- |\n| **Unified API**          | One `can()` function for all checks            |\n| **Declarative policies** | Conditions describe what's allowed             |\n| **No helper explosion**  | No `canUpdateDocument`, `canReadProject`, etc. |\n| **Composable**           | Easy to add new conditions                     |\n\n#### Cons\n\n| Limitation              | Description                           |\n| ----------------------- | ------------------------------------- |\n| **More complex setup**  | Requires building a permission engine |\n| **TypeScript overhead** | Condition types can get complex       |\n\n#### When to Use\n\n- Permissions depend on resource state\n- Ownership, status, or context matters\n- Need field-level restrictions\n- Environment-aware rules (time, location)\n\n#### When to Avoid\n\n- Only have simple role-based permissions\n\n### Using a Library\n\nLibraries like CASL or Casbin can simplify permission management by providing a structured API, type safety, and query generation.\n\n```typescript\nimport { AbilityBuilder, Ability } from \"@casl/ability\"\n```\n\n#### What CASL Adds\n\n| Feature                 | Description                                     |\n| ----------------------- | ----------------------------------------------- |\n| **Battle-tested**       | Production-ready, well-documented               |\n| **Familiar API**        | Popular library that your team may already know |\n| **Advanced conditions** | MongoDB-style operators (`$ne`, `$in`, etc.)    |\n\n#### CASL Tradeoffs\n\n| Issue                  | Description                                     |\n| ---------------------- | ----------------------------------------------- |\n| **Class-based design** | Requires `subject()` wrapper for plain objects  |\n| **RSC compatibility**  | `subject()` mutates objects (needs workarounds) |\n\n#### When to Use\n\n- You need ABAC level permissions, but don't want to maintain an ABAC system\n\n#### When to Avoid\n\n- You don't need ABAC level permissions\n- You don't need the advanced features of CASL\n- Working around the `subject()` wrapper is more hassle than writing your own ABAC implementation\n\n### Quick Decision Guide\n\nI generally recommend using a basic ABAC system as a starting point for most applications. It provides flexibility without the complexity of an advanced ABAC system and most projects evolve past what RBAC can support rather quickly.\n\nFrom there add additional features as you need them which makes the system easier to maintain over time.\n\n## Key Takeaways\n\n1. **Start simple** - Begin with basic authorization, refactor when needed\n2. **Centralize authorization** - Use a permissions module and services layer\n3. **Match complexity to requirements** - Don't over-engineer; basic ABAC might be enough\n4. **Consider libraries** - CASL, Casbin, or managed services to save time\n","slug":"recap","title":"Choosing the Right Permission Model","section":"Conclusion","icon":"check","filePath":"/home/runner/work/fem-permission-systems-that-scale/fem-permission-systems-that-scale/lessons/06-conclusion/A-recap.md","nextSlug":null,"prevSlug":"/fem-permission-systems-that-scale/lessons/permission-libraries/upgrading-to-casl"}},"__N_SSG":true},"page":"/lessons/[section]/[slug]","query":{"section":"conclusion","slug":"recap"},"buildId":"0pmNDTvP7unAQwKbvWq8S","assetPrefix":"/fem-permission-systems-that-scale","isFallback":false,"gsp":true,"scriptLoader":[]}</script></body></html>
